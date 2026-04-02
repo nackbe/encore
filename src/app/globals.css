@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 230 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 230 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 20% 15%;
+
+    --primary: 20 58% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 183 28% 50%;
+    --secondary-foreground: 181 14% 15%;
+
+    --accent: 183 28% 50%;
+    --accent-foreground: 181 14% 15%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 20 58% 59%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 30% 11%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 25% 15%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 25% 15%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 20 58% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 183 28% 50%;
+    --secondary-foreground: 0 0% 90%;
+
+    --accent: 183 28% 50%;
+    --accent-foreground: 0 0% 90%;
+
+    --muted: 240 20% 20%;
+    --muted-foreground: 240 5% 60%;
+
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 18% 22%;
+    --input: 240 18% 22%;
+    --ring: 20 58% 59%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
