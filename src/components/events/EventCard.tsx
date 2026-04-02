@@ -3,9 +3,9 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { Star, Eye } from 'lucide-react';
+import { useLocale } from 'next-intl';
 
-import { cn } from '@/lib/utils';
-import { getEventTypeColor } from '@/lib/utils';
+import { cn, getEventTypeColor, formatEventDate } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { EventType, BadgeType } from '@/types';
@@ -78,12 +78,9 @@ export function EventCard({
   showBadges = true,
   onClick,
 }: EventCardProps) {
+  const locale = useLocale();
   const hasGoldBorder = event.isMemorable || event.historicBadges.length > 0;
-  const formattedDate = new Date(event.date).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const formattedDate = formatEventDate(event.date, locale);
 
   const primaryArtist = event.artists[0];
   const fallbackImage = primaryArtist?.imageUrl ?? null;

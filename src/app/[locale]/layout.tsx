@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { locales } from '@/lib/i18n/config';
 import { QueryProvider } from '@/app/providers';
 import { UserProvider } from '@/providers/UserProvider';
+import { Toaster } from '@/components/ui/toaster';
 import '@/app/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -36,7 +37,10 @@ export default async function LocaleLayout({
       <body className={`${inter.variable} font-sans dark`}>
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
-            <UserProvider>{children}</UserProvider>
+            <UserProvider>
+              {children}
+              <Toaster />
+            </UserProvider>
           </QueryProvider>
         </NextIntlClientProvider>
       </body>

@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/useToast';
 import { revalidateCollection } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,7 +64,9 @@ export function RegisterFlow() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const locale = useLocale();
+  const { toast } = useToast();
   const t = useTranslations('register');
+  const tError = useTranslations('error');
   const tTypes = useTranslations('eventTypes');
   const tMoods = useTranslations('moods');
 
@@ -279,6 +282,7 @@ export function RegisterFlow() {
 
     if (eventError || !userEvent) {
       console.error('Error creating event:', eventError);
+      toast({ title: tError('title'), description: tError('description'), variant: 'destructive' });
       return;
     }
 
@@ -429,7 +433,7 @@ export function RegisterFlow() {
                           'rounded px-1.5 py-0.5 text-[10px] font-medium uppercase',
                           result.type === 'event' ? 'bg-primary/20 text-primary' : 'bg-accent text-accent-foreground'
                         )}>
-                          {result.type === 'event' ? 'Evento' : 'Artista'}
+                          {result.type === 'event' ? t('resultTypeEvent') : t('resultTypeArtist')}
                         </span>
                         <span className="font-medium">{result.name}</span>
                         {result.subtitle && (
@@ -563,10 +567,10 @@ export function RegisterFlow() {
               ) : (
                 <div className="rounded-lg bg-muted p-6 text-center">
                   <p className="text-sm text-muted-foreground">
-                    No se encontraron artistas para este evento.
+                    {t('noArtistsFound')}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Puedes buscar artistas en el paso anterior o continuar sin artistas.
+                    {t('noArtistsHint')}
                   </p>
                 </div>
               )}
@@ -598,7 +602,7 @@ export function RegisterFlow() {
                 <p><span className="font-medium">{t('eventDate')}:</span> {watch('date') || '-'}</p>
                 <p><span className="font-medium">{t('eventCity')}:</span> {watch('city') || '-'}</p>
                 <p><span className="font-medium">{t('eventType')}:</span> {tTypes(watch('eventType'))}</p>
-                <p><span className="font-medium">Artistas:</span> {selectedArtistIds.length} {t('selectArtists').toLowerCase().includes('artistas') ? 'seleccionados' : 'selected'}</p>
+                <p><span className="font-medium">{t('artistsLabel')}:</span> {t('selectedCount', { count: selectedArtistIds.length })}</p>
               </div>
 
               {/* Rating */}
@@ -608,11 +612,13 @@ export function RegisterFlow() {
                   control={control}
                   name="rating"
                   render={({ field }) => (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1" role="radiogroup" aria-label={t('rating')}>
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
                           type="button"
+                          aria-label={`${star} / 5`}
+                          aria-pressed={field.value === star}
                           onClick={() => field.onChange(field.value === star ? undefined : star)}
                           className="p-1"
                         >
@@ -638,7 +644,7 @@ export function RegisterFlow() {
                   control={control}
                   name="mood"
                   render={({ field }) => (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('mood')}>
                       {(['epic', 'intimate', 'euphoric', 'nostalgic', 'transcendent', 'rainy'] as const).map((mood) => (
                         <button
                           key={mood}

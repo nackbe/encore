@@ -252,11 +252,13 @@ export default function EditEventPage() {
         {/* Rating */}
         <div className="space-y-2">
           <Label>{t('rating')}</Label>
-          <div className="flex gap-1">
+          <div className="flex gap-1" role="radiogroup" aria-label={t('rating')}>
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
                 type="button"
+                aria-label={`${star} / 5`}
+                aria-pressed={rating === star}
                 onClick={() => setRating(rating === star ? null : star)}
                 className="p-1"
               >
@@ -276,7 +278,7 @@ export default function EditEventPage() {
         {/* Mood */}
         <div className="space-y-2">
           <Label>{t('mood')}</Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('mood')}>
             {MOODS.map((m) => (
               <button
                 key={m}

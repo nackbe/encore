@@ -1,12 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
+
+// In-memory cache for reverse geocoding results (survives between requests in the same serverless instance)
+const geocodeCache = new Map<string, { city: string; country: string; countryCode: string; ts: number }>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+const MAX_CACHE_SIZE = 500;
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown';
+  const { allowed } = rateLimit(ip, { limit: 30, windowSec: 60 });
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const params = req.nextUrl.searchParams;
   const lat = params.get('lat');
   const lng = params.get('lng');
 
   if (!lat || !lng) {
     return NextResponse.json({ error: 'lat and lng are required' }, { status: 400 });
+  }
+
+  // Check cache first
+  const cacheKey = `${lat},${lng}`;
+  const cached = geocodeCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return NextResponse.json({ city: cached.city, country: cached.country, countryCode: cached.countryCode });
   }
 
   try {
@@ -33,6 +52,13 @@ export async function GET(req: NextRequest) {
       '';
     const country = data.address?.country ?? '';
     const countryCode = (data.address?.country_code ?? '').toUpperCase();
+
+    // Cache the result
+    if (geocodeCache.size >= MAX_CACHE_SIZE) {
+      const oldestKey = geocodeCache.keys().next().value!;
+      geocodeCache.delete(oldestKey);
+    }
+    geocodeCache.set(cacheKey, { city, country, countryCode, ts: Date.now() });
 
     return NextResponse.json({ city, country, countryCode });
   } catch {

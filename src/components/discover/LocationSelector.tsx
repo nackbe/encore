@@ -264,6 +264,7 @@ export function LocationSelector({
         {/* Map toggle */}
         <button
           type="button"
+          aria-label={showMap ? 'Hide map' : 'Show map'}
           onClick={() => { const next = !showMap; setShowMap(next); setShowDropdown(false); if (next) { setExactMatch(false); onLocationChange({ city: selectedCity, country: selectedCountry, label: buildLabel(selectedCity, selectedCountry), exactMatch: false }); } }}
           className={cn(
             'flex h-10 items-center gap-1.5 rounded-lg border px-3 text-sm transition-colors',

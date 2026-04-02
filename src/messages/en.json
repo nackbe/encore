@@ -84,7 +84,13 @@
     "duplicateRegisterOther": "Register another",
     "next": "Next",
     "back": "Back",
-    "searchRequired": "You must search and select an event before continuing"
+    "searchRequired": "You must search and select an event before continuing",
+    "resultTypeEvent": "Event",
+    "resultTypeArtist": "Artist",
+    "noArtistsFound": "No artists found for this event.",
+    "noArtistsHint": "You can search for artists in the previous step or continue without artists.",
+    "artistsLabel": "Artists",
+    "selectedCount": "{count} selected"
   },
   "collection": {
     "title": "My Collection",
@@ -199,7 +205,8 @@
     "favDay": "Favorite day",
     "musicalDiversity": "Musical diversity",
     "favVenue": "Favorite venue",
-    "activeMonth": "Most active month"
+    "activeMonth": "Most active month",
+    "noDataYet": "No data yet"
   },
   "artist": {
     "timesSeen": "{count, plural, one {time seen live} other {times seen live}}",

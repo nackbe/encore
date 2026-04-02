@@ -42,6 +42,22 @@ export function formatDate(
 }
 
 /**
+ * Formats an event date in short form: "15 ene 2025"
+ */
+export function formatEventDate(date: string | Date, locale: string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/**
+ * Formats a date as "month year" for timeline grouping: "Enero 2025"
+ */
+export function formatMonthYear(date: string | Date, locale: string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
+}
+
+/**
  * Returns a hex color string for a given music genre.
  * Used for placeholder images and genre badges.
  */

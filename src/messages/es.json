@@ -84,7 +84,13 @@
     "duplicateRegisterOther": "Registrar otro",
     "next": "Siguiente",
     "back": "Atrás",
-    "searchRequired": "Debes buscar y seleccionar un evento antes de continuar"
+    "searchRequired": "Debes buscar y seleccionar un evento antes de continuar",
+    "resultTypeEvent": "Evento",
+    "resultTypeArtist": "Artista",
+    "noArtistsFound": "No se encontraron artistas para este evento.",
+    "noArtistsHint": "Puedes buscar artistas en el paso anterior o continuar sin artistas.",
+    "artistsLabel": "Artistas",
+    "selectedCount": "{count} seleccionados"
   },
   "collection": {
     "title": "Mi Colección",
@@ -199,7 +205,8 @@
     "favDay": "Día favorito",
     "musicalDiversity": "Diversidad musical",
     "favVenue": "Venue favorito",
-    "activeMonth": "Mes más activo"
+    "activeMonth": "Mes más activo",
+    "noDataYet": "No hay datos aún"
   },
   "artist": {
     "timesSeen": "{count, plural, one {vez visto en vivo} other {veces visto en vivo}}",

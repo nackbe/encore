@@ -9,9 +9,8 @@ const intlMiddleware = createIntlMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
-  // First, refresh the Supabase auth session so server components
-  // always have a valid token (tokens expire after ~1 hour).
-  let response = intlMiddleware(request);
+  // Collect Supabase auth cookies that need to be set/removed
+  const supabaseCookies: Array<{ name: string; value: string; options: CookieOptions }> = [];
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,27 +22,26 @@ export async function middleware(request: NextRequest) {
         },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          response.cookies.set({ name, value, ...options });
+          supabaseCookies.push({ name, value, options });
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          response.cookies.set({ name, value: '', ...options });
+          supabaseCookies.push({ name, value: '', options });
         },
       },
     }
   );
 
-  // This refreshes the session if expired and sets new cookies
+  // Refresh the session if expired (updates request cookies in-place)
   await supabase.auth.getUser();
 
-  // Re-run intl middleware with updated cookies
-  response = intlMiddleware(request);
+  // Run intl middleware once with refreshed cookies
+  const response = intlMiddleware(request);
+
+  // Apply Supabase cookie changes to the intl response
+  for (const cookie of supabaseCookies) {
+    response.cookies.set({ name: cookie.name, value: cookie.value, ...cookie.options });
+  }
 
   return response;
 }

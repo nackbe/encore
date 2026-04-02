@@ -83,6 +83,7 @@ export function WishlistButton({
     return (
       <button
         type="button"
+        aria-label={wishlisted ? t('saved') : t('wantToGo')}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -104,6 +105,7 @@ export function WishlistButton({
     return (
       <button
         type="button"
+        aria-label={wishlisted ? t('saved') : t('wantToGo')}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

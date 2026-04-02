@@ -21,7 +21,7 @@ import Image from 'next/image';
 
 import { useQueryClient } from '@tanstack/react-query';
 
-import { cn } from '@/lib/utils';
+import { cn, formatEventDate, formatMonthYear } from '@/lib/utils';
 import { revalidateCollection } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import {
@@ -74,7 +74,17 @@ export function CollectionGrid({ initialEvents }: CollectionGridProps) {
 
   const queryClient = useQueryClient();
   const [events, setEvents] = React.useState(initialEvents);
-  const [viewMode, setViewMode] = React.useState<ViewMode>('grid');
+  const [viewMode, setViewModeRaw] = React.useState<ViewMode>('grid');
+  const setViewMode = React.useCallback((mode: ViewMode) => {
+    setViewModeRaw(mode);
+    localStorage.setItem('collection-view-mode', mode);
+  }, []);
+
+  // Restore persisted view mode after hydration
+  React.useEffect(() => {
+    const saved = localStorage.getItem('collection-view-mode') as ViewMode | null;
+    if (saved && saved !== 'grid') setViewModeRaw(saved);
+  }, []);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedYear, setSelectedYear] = React.useState<string>('');
   const [selectedTypes, setSelectedTypes] = React.useState<Set<string>>(new Set());
@@ -279,7 +289,7 @@ export function CollectionGrid({ initialEvents }: CollectionGridProps) {
       const date = getEventDate(event);
       if (!date) return;
       const d = new Date(date);
-      const label = d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
+      const label = formatMonthYear(d, locale);
       if (label !== currentLabel) {
         currentLabel = label;
         groups.push({ label, events: [] });
@@ -606,6 +616,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       type="button"
+      aria-label="Delete event"
       onClick={(e) => {
         e.stopPropagation();
         onClick();
@@ -692,11 +703,7 @@ function GridCard({
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {new Date(date).toLocaleDateString(locale, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+            {formatEventDate(date, locale)}
           </span>
           {city && (
             <span className="flex items-center gap-1">
@@ -770,11 +777,7 @@ function ListItem({
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-semibold">{name}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {new Date(date).toLocaleDateString(locale, {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          {formatEventDate(date, locale)}
           {city && ` · ${city}`}
           {artists.length > 0 && ` · ${artists.map((a) => a.artists.name).join(', ')}`}
         </p>
@@ -881,10 +884,7 @@ function TimelineView({
 
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                         <span>
-                          {new Date(date).toLocaleDateString(locale, {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                          {formatEventDate(date, locale)}
                         </span>
                         {city && (
                           <span className="flex items-center gap-1">

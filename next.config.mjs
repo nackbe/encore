@@ -42,7 +42,7 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://*.basemaps.cartocdn.com",
               "font-src 'self'",

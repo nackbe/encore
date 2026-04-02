@@ -14,6 +14,7 @@ import {
   Pencil,
   ListMusic,
 } from 'lucide-react';
+import { DeleteEventButton } from '@/components/events/DeleteEventButton';
 
 type UserEventWithJoins = UserEvent & {
   global_events: (GlobalEvent & { venues: Venue | null }) | null;
@@ -110,12 +111,16 @@ export default async function EventPage({
       <div className="mt-6">
         <div className="flex items-start justify-between">
           <h1 className="text-3xl font-bold tracking-tight">{eventName}</h1>
-          <Link
-            href={`/${locale}/event/${id}/edit`}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border hover:bg-accent"
-          >
-            <Pencil className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <DeleteEventButton eventId={id} eventName={eventName} />
+            <Link
+              href={`/${locale}/event/${id}/edit`}
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-border hover:bg-accent"
+              aria-label={t('editDetails')}
+            >
+              <Pencil className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
         {/* Meta info */}

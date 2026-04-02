@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 const PAGE_SIZE = 20;
+
+// In-memory cache for forward geocoding results
+const forwardGeoCache = new Map<string, { lat: number; lng: number; ts: number }>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+const MAX_CACHE_SIZE = 200;
 
 /** Haversine distance in km between two lat/lng points */
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -21,6 +27,12 @@ async function forwardGeocode(city: string, country: string): Promise<{ lat: num
   const q = [city, country].filter(Boolean).join(', ');
   if (!q) return null;
 
+  // Check cache
+  const cached = forwardGeoCache.get(q);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return { lat: cached.lat, lng: cached.lng };
+  }
+
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
@@ -29,7 +41,13 @@ async function forwardGeocode(city: string, country: string): Promise<{ lat: num
     if (!res.ok) return null;
     const data = await res.json();
     if (data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      const result = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      if (forwardGeoCache.size >= MAX_CACHE_SIZE) {
+        const oldestKey = forwardGeoCache.keys().next().value!;
+        forwardGeoCache.delete(oldestKey);
+      }
+      forwardGeoCache.set(q, { ...result, ts: Date.now() });
+      return result;
     }
   } catch {
     // Geocode failed — fall through to standard mode
@@ -38,6 +56,12 @@ async function forwardGeocode(city: string, country: string): Promise<{ lat: num
 }
 
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown';
+  const { allowed } = rateLimit(ip, { limit: 60, windowSec: 60 });
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const supabase = await createClient();
   const params = req.nextUrl.searchParams;
 
@@ -97,7 +121,8 @@ export async function GET(req: NextRequest) {
     };
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error('Discover API error (proximity):', error.message);
+      return NextResponse.json({ error: 'Failed to load events' }, { status: 500 });
     }
 
     // Calculate distance and sort: same city/country first, then by distance
@@ -165,7 +190,8 @@ export async function GET(req: NextRequest) {
   const { data: events, count, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Discover API error (standard):', error.message);
+    return NextResponse.json({ error: 'Failed to load events' }, { status: 500 });
   }
 
   return NextResponse.json({

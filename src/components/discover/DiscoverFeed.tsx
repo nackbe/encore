@@ -20,7 +20,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, formatEventDate, formatMonthYear } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { WishlistButton } from '@/components/events/WishlistButton';
 import { LocationSelector, type LocationFilter } from './LocationSelector';
@@ -83,7 +83,17 @@ export function DiscoverFeed({
   const [resetLocationKey, setResetLocationKey] = useState(0);
   const [sortBy, setSortBy] = useState<SortType>('date_asc');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewModeRaw] = useState<ViewMode>('grid');
+  const setViewMode = useCallback((mode: ViewMode) => {
+    setViewModeRaw(mode);
+    localStorage.setItem('discover-view-mode', mode);
+  }, []);
+
+  // Restore persisted view mode after hydration
+  useEffect(() => {
+    const saved = localStorage.getItem('discover-view-mode') as ViewMode | null;
+    if (saved && saved !== 'grid') setViewModeRaw(saved);
+  }, []);
 
   // ── Wishlist ──
   const [wishlistedIds, setWishlistedIds] = useState<Set<string>>(
@@ -278,15 +288,21 @@ export function DiscoverFeed({
     return filtered;
   }, [events, activeTab, selectedGenres, wishlistedIds]);
 
-  // ── Timeline grouping ──
+  // ── Timeline grouping (always chronological) ──
   const groupedByMonth = useMemo(() => {
+    const sorted = [...filteredEvents].sort((a, b) => {
+      const da = a.date ?? '';
+      const db = b.date ?? '';
+      return da.localeCompare(db);
+    });
+
     const groups: { label: string; events: GlobalEventWithJoins[] }[] = [];
     let currentLabel = '';
 
-    filteredEvents.forEach((event) => {
+    sorted.forEach((event) => {
       if (!event.date) return;
       const d = new Date(event.date);
-      const label = d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
+      const label = formatMonthYear(d, locale);
       if (label !== currentLabel) {
         currentLabel = label;
         groups.push({ label, events: [] });
@@ -523,8 +539,16 @@ export function DiscoverFeed({
 
       {/* Loading state */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="aspect-[4/3] animate-pulse bg-muted" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredEvents.length === 0 ? (
         /* Empty states */
@@ -661,11 +685,7 @@ function DiscoverGridCard({
         <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
-            {new Date(event.date).toLocaleDateString(locale, {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+            {formatEventDate(event.date, locale)}
           </span>
           {city && (
             <span className="flex items-center gap-1">
@@ -724,11 +744,7 @@ function DiscoverListItem({
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-sm font-semibold">{event.name}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {new Date(event.date).toLocaleDateString(locale, {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          {formatEventDate(event.date, locale)}
           {city && ` · ${city}`}
           {artists.length > 0 && ` · ${artists.map((a) => a.artists.name).join(', ')}`}
         </p>
@@ -824,10 +840,7 @@ function DiscoverTimeline({
 
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                         <span>
-                          {new Date(event.date).toLocaleDateString(locale, {
-                            day: 'numeric',
-                            month: 'short',
-                          })}
+                          {formatEventDate(event.date, locale)}
                         </span>
                         {city && (
                           <span className="flex items-center gap-1">
