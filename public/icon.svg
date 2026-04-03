@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#161625"/>
+  <!-- Ticket outline -->
+  <rect x="96" y="120" width="320" height="272" rx="20" fill="none" stroke="#D4845A" stroke-width="8"/>
+  <!-- Perforated edge notches -->
+  <circle cx="96" cy="220" r="16" fill="#161625" stroke="#D4845A" stroke-width="8"/>
+  <circle cx="96" cy="292" r="16" fill="#161625" stroke="#D4845A" stroke-width="8"/>
+  <!-- Perforated vertical dashed line -->
+  <line x1="160" y1="140" x2="160" y2="372" stroke="#D4845A" stroke-width="4" stroke-dasharray="8 12" opacity="0.4"/>
+  <!-- E inside the ticket -->
+  <rect x="200" y="176" width="36" height="160" rx="4" fill="#D4845A"/>
+  <rect x="236" y="176" width="120" height="32" rx="4" fill="#D4845A"/>
+  <rect x="236" y="240" width="96" height="32" rx="4" fill="#D4845A"/>
+  <rect x="236" y="304" width="120" height="32" rx="4" fill="#D4845A"/>
+  <!-- Stub detail lines -->
+  <rect x="116" y="200" width="28" height="4" rx="2" fill="#D4845A" opacity="0.3"/>
+  <rect x="116" y="214" width="20" height="4" rx="2" fill="#D4845A" opacity="0.3"/>
+  <rect x="116" y="300" width="28" height="4" rx="2" fill="#D4845A" opacity="0.3"/>
+  <rect x="116" y="314" width="20" height="4" rx="2" fill="#D4845A" opacity="0.3"/>
+</svg>
