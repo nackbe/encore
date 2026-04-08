@@ -425,7 +425,7 @@ export function RegisterFlow() {
     try {
       const res = await fetch('/api/events/import', {
         method: 'POST',
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(60000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           source: unified.source,

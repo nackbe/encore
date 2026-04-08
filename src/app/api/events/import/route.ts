@@ -3,9 +3,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * POST /api/events/import
- * Imports an external event (Setlist.fm, Bandsintown, MusicBrainz) into global_events.
- * Uses service_role to bypass RLS (authenticated users can only insert source='user_submitted').
- * Returns the global_event_id.
+ * Imports an external event (Setlist.fm, Bandsintown, MusicBrainz, Wikipedia) into global_events.
+ * Uses service_role to bypass RLS.
+ * Optimized: batch artist lookups and inserts instead of sequential.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  console.log(`[import] Start: "${name}" (${source}:${source_id})`);
   const supabase = createAdminClient();
 
   // Check if this source_id already exists
@@ -27,7 +26,6 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (existing) {
-    console.log(`[import] Already exists: ${existing.id}`);
     return NextResponse.json({ globalEventId: existing.id });
   }
 
@@ -56,78 +54,94 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to import event' }, { status: 500 });
   }
 
-  // Insert artists and link them
-  const artistArr = Array.isArray(artists) ? artists : [];
-  for (let i = 0; i < artistArr.length; i++) {
-    const artist = artistArr[i];
-    if (!artist.name) continue;
-
-    const normalized = artist.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    // Upsert artist (check by normalized name)
-    const { data: existingArtist } = await supabase
-      .from('artists')
-      .select('id')
-      .eq('name_normalized', normalized)
-      .maybeSingle();
-
-    let artistId: string;
-    if (existingArtist) {
-      artistId = existingArtist.id;
-      // Update image/genres if artist is missing them and we have data from cascade
-      const patch: Record<string, unknown> = {};
-      if (artist.image_url) {
-        const { data: current } = await supabase
-          .from('artists')
-          .select('image_url, genres')
-          .eq('id', artistId)
-          .single();
-        if (current && !current.image_url) patch.image_url = artist.image_url;
-        if (current && (!current.genres || current.genres.length === 0) && artist.genres?.length) {
-          patch.genres = artist.genres;
-        }
-      } else if (artist.genres?.length) {
-        const { data: current } = await supabase
-          .from('artists')
-          .select('genres')
-          .eq('id', artistId)
-          .single();
-        if (current && (!current.genres || current.genres.length === 0)) {
-          patch.genres = artist.genres;
-        }
-      }
-      if (Object.keys(patch).length > 0) {
-        await supabase.from('artists').update(patch).eq('id', artistId);
-      }
-    } else {
-      const { data: newArtist, error: artistError } = await supabase
-        .from('artists')
-        .insert({
-          name: artist.name,
-          name_normalized: normalized,
-          image_url: artist.image_url ?? null,
-          genres: artist.genres?.length ? artist.genres : null,
-        })
-        .select('id')
-        .single();
-
-      if (artistError || !newArtist) continue;
-      artistId = newArtist.id;
-    }
-
-    // Link artist to event
-    await supabase
-      .from('global_event_artists')
-      .insert({
-        global_event_id: newEvent.id,
-        artist_id: artistId,
-        role: 'performer',
-        billing_order: i,
-      })
-      .select()
-      .maybeSingle();
+  // --- Batch artist processing ---
+  const artistArr = Array.isArray(artists) ? artists.filter((a: { name?: string }) => a.name) : [];
+  if (artistArr.length === 0) {
+    return NextResponse.json({ globalEventId: newEvent.id });
   }
 
-  console.log(`[import] Done: ${newEvent.id} (${artistArr.length} artists)`);
+  // Normalize all names
+  const normalize = (n: string) => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const artistsWithNorm = artistArr.map((a: { name: string; image_url?: string; genres?: string[] }) => ({
+    ...a,
+    normalized: normalize(a.name),
+  }));
+
+  // Batch lookup existing artists (chunks of 500)
+  const allNormalized = artistsWithNorm.map((a: { normalized: string }) => a.normalized);
+  const existingMap = new Map<string, string>(); // normalized → id
+  for (let i = 0; i < allNormalized.length; i += 500) {
+    const batch = allNormalized.slice(i, i + 500);
+    const { data } = await supabase
+      .from('artists')
+      .select('id, name_normalized')
+      .in('name_normalized', batch);
+    if (data) {
+      for (const a of data) existingMap.set(a.name_normalized, a.id);
+    }
+  }
+
+  // Insert missing artists in one batch
+  const toInsert = artistsWithNorm
+    .filter((a: { normalized: string }) => !existingMap.has(a.normalized))
+    // Dedup by normalized name
+    .filter((a: { normalized: string }, i: number, arr: { normalized: string }[]) =>
+      arr.findIndex(x => x.normalized === a.normalized) === i
+    )
+    .map((a: { name: string; normalized: string; image_url?: string; genres?: string[] }) => ({
+      name: a.name,
+      name_normalized: a.normalized,
+      image_url: a.image_url ?? null,
+      genres: a.genres?.length ? a.genres : null,
+    }));
+
+  if (toInsert.length > 0) {
+    // Insert in chunks of 200
+    for (let i = 0; i < toInsert.length; i += 200) {
+      const chunk = toInsert.slice(i, i + 200);
+      const { data, error } = await supabase
+        .from('artists')
+        .insert(chunk)
+        .select('id, name_normalized');
+
+      if (data) {
+        for (const a of data) existingMap.set(a.name_normalized, a.id);
+      } else if (error) {
+        // Fallback: insert one by one on conflict
+        for (const item of chunk) {
+          const { data: single } = await supabase
+            .from('artists')
+            .upsert(item, { onConflict: 'name_normalized' })
+            .select('id, name_normalized')
+            .single();
+          if (single) existingMap.set(single.name_normalized, single.id);
+        }
+      }
+    }
+  }
+
+  // Batch insert artist↔event links
+  const seen = new Set<string>();
+  const links = artistsWithNorm
+    .map((a: { normalized: string }, i: number) => {
+      const artistId = existingMap.get(a.normalized);
+      if (!artistId || seen.has(artistId)) return null;
+      seen.add(artistId);
+      return {
+        global_event_id: newEvent.id,
+        artist_id: artistId,
+        role: 'performer' as const,
+        billing_order: i,
+      };
+    })
+    .filter(Boolean);
+
+  if (links.length > 0) {
+    // Insert links in chunks of 500
+    for (let i = 0; i < links.length; i += 500) {
+      await supabase.from('global_event_artists').insert(links.slice(i, i + 500));
+    }
+  }
+
   return NextResponse.json({ globalEventId: newEvent.id });
 }
