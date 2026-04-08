@@ -56,9 +56,12 @@ export function Navbar({ user }: NavbarProps) {
   const supabase = useSupabase();
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push(`/${locale}`);
-    router.refresh();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Force logout even if signOut fails
+    }
+    window.location.href = `/${locale}`;
   }
 
   const otherLocale = locale === 'es' ? 'en' : 'es';
