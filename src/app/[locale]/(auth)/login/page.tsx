@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useSupabase } from '@/hooks/useSupabase';
 import { loginSchema } from '@/lib/validations';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Music, Mail, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
+  const locale = useLocale();
   const supabase = useSupabase();
   const router = useRouter();
 
@@ -43,7 +44,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/discover');
+    router.push(`/${locale}/collection`);
     router.refresh();
   }
 
