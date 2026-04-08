@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       name: a.name,
       name_normalized: a.normalized,
       image_url: a.image_url ?? null,
-      genres: a.genres?.length ? a.genres : null,
+      genres: a.genres?.length ? a.genres : undefined,
     }));
 
   if (toInsert.length > 0) {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         for (const item of chunk) {
           const { data: single } = await supabase
             .from('artists')
-            .upsert(item, { onConflict: 'name_normalized' })
+            .upsert(item as never, { onConflict: 'name_normalized' })
             .select('id, name_normalized')
             .single();
           if (single) existingMap.set(single.name_normalized, single.id);
@@ -134,12 +134,12 @@ export async function POST(request: NextRequest) {
         billing_order: i,
       };
     })
-    .filter(Boolean);
+    .filter((l): l is NonNullable<typeof l> => l !== null);
 
   if (links.length > 0) {
     // Insert links in chunks of 500
     for (let i = 0; i < links.length; i += 500) {
-      await supabase.from('global_event_artists').insert(links.slice(i, i + 500));
+      await supabase.from('global_event_artists').insert(links.slice(i, i + 500) as never);
     }
   }
 
