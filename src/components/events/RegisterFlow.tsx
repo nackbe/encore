@@ -494,9 +494,17 @@ export function RegisterFlow() {
     if (!user) return;
 
     try {
-      console.log('[submit] 1. Start');
-      // Try to refresh auth token — don't block if it fails (session may still be valid)
-      try { await supabase.auth.refreshSession(); } catch {}
+      console.log('[submit] 1. Start — ensuring valid session');
+      // Ensure we have a fresh token before writing to DB
+      const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !sessionData.session) {
+        // Session truly expired — try getSession as fallback
+        const { data: fallback } = await supabase.auth.getSession();
+        if (!fallback.session) {
+          toast({ title: tError('title'), description: 'Sesión expirada. Recarga la página.', variant: 'destructive' });
+          return;
+        }
+      }
 
       let globalEventId = data.globalEventId;
 
