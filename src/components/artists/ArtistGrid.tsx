@@ -19,14 +19,26 @@ interface ArtistGridProps {
   artists: ArtistData[];
   selectedIds: string[];
   onToggle: (id: string) => void;
+  onSelectAll?: (ids: string[]) => void;
+  onDeselectAll?: (ids: string[]) => void;
   selectable?: boolean;
+  selectAllLabel?: string;
+  deselectAllLabel?: string;
+  filterPlaceholder?: string;
+  selectedCountLabel?: (count: number) => string;
 }
 
 export function ArtistGrid({
   artists,
   selectedIds,
   onToggle,
+  onSelectAll,
+  onDeselectAll,
   selectable = false,
+  selectAllLabel = 'Select all',
+  deselectAllLabel = 'Deselect all',
+  filterPlaceholder = 'Filter artists...',
+  selectedCountLabel,
 }: ArtistGridProps) {
   const [filter, setFilter] = React.useState('');
 
@@ -41,19 +53,21 @@ export function ArtistGrid({
     const allSelected = allIds.every((id) => selectedIds.includes(id));
 
     if (allSelected) {
-      // Deselect all visible
-      allIds.forEach((id) => {
-        if (selectedIds.includes(id)) {
-          onToggle(id);
-        }
-      });
+      if (onDeselectAll) {
+        onDeselectAll(allIds);
+      } else {
+        allIds.forEach((id) => {
+          if (selectedIds.includes(id)) onToggle(id);
+        });
+      }
     } else {
-      // Select all visible
-      allIds.forEach((id) => {
-        if (!selectedIds.includes(id)) {
-          onToggle(id);
-        }
-      });
+      if (onSelectAll) {
+        onSelectAll(allIds);
+      } else {
+        allIds.forEach((id) => {
+          if (!selectedIds.includes(id)) onToggle(id);
+        });
+      }
     }
   }
 
@@ -70,7 +84,7 @@ export function ArtistGrid({
           <Input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filter artists..."
+            placeholder={filterPlaceholder}
             className="pl-10"
           />
         </div>
@@ -81,7 +95,7 @@ export function ArtistGrid({
             size="sm"
             onClick={handleSelectAll}
           >
-            {allVisibleSelected ? 'Deselect all' : 'Select all'}
+            {allVisibleSelected ? deselectAllLabel : selectAllLabel}
           </Button>
         )}
       </div>
@@ -89,8 +103,9 @@ export function ArtistGrid({
       {/* Selected count */}
       {selectable && selectedIds.length > 0 && (
         <p className="text-sm text-muted-foreground">
-          {selectedIds.length} artist{selectedIds.length !== 1 ? 's' : ''}{' '}
-          selected
+          {selectedCountLabel
+            ? selectedCountLabel(selectedIds.length)
+            : `${selectedIds.length} artist${selectedIds.length !== 1 ? 's' : ''} selected`}
         </p>
       )}
 

@@ -76,8 +76,16 @@ export interface SetlistFmSetlist {
   artist: { mbid: string; name: string };
   venue: {
     name: string;
-    city: { name: string; country: { name: string; code: string } };
+    city: {
+      id?: string;
+      name: string;
+      state?: string;
+      stateCode?: string;
+      country: { name: string; code: string };
+      coords?: { lat: number; long: number };
+    };
   };
+  tour?: { name: string };
   sets: {
     set: Array<{
       name?: string;

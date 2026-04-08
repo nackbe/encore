@@ -22,10 +22,9 @@ interface MobileNavLink {
 }
 
 const mobileLinks: MobileNavLink[] = [
-  { href: '/discover', labelKey: 'discover', icon: Compass },
   { href: '/collection', labelKey: 'collection', icon: Library },
-  { href: '/register', labelKey: 'register', icon: PlusCircle, prominent: true },
   { href: '/stats', labelKey: 'stats', icon: BarChart3 },
+  { href: '/register', labelKey: 'register', icon: PlusCircle, prominent: true },
   { href: '/settings', labelKey: 'profile', icon: User },
 ];
 

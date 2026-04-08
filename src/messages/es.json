@@ -87,15 +87,21 @@
     "searchRequired": "Debes buscar y seleccionar un evento antes de continuar",
     "resultTypeEvent": "Evento",
     "resultTypeArtist": "Artista",
+    "noResults": "No encontramos ese evento",
+    "noResultsHint": "Intenta buscar por nombre del artista, o por el nombre del festival.",
     "noArtistsFound": "No se encontraron artistas para este evento.",
     "noArtistsHint": "Puedes buscar artistas en el paso anterior o continuar sin artistas.",
     "artistsLabel": "Artistas",
-    "selectedCount": "{count} seleccionados"
+    "selectedCount": "{count} seleccionados",
+    "filterArtists": "Filtrar artistas..."
   },
   "collection": {
     "title": "Mi Colección",
     "eventsCount": "eventos",
     "artistsCount": "artistas",
+    "citiesCount": "ciudades",
+    "countriesCount": "países",
+    "registerCta": "Estuve Ahí",
     "allYears": "Todos",
     "searchPlaceholder": "Buscar artista, evento o ciudad...",
     "clearFilters": "Limpiar filtros",
@@ -229,6 +235,7 @@
     "setlistComingSoon": "Setlist próximamente",
     "noSetlist": "Setlist no disponible",
     "historicBadge": "Hito histórico",
+    "historicMoments": "Momentos históricos",
     "editDetails": "Editar detalles",
     "artists": "Artistas",
     "artistsSeen": "Artistas que viste",
@@ -321,15 +328,15 @@
   },
   "landing": {
     "hero": "Tu historia musical en vivo",
-    "heroDescription": "Registra tus conciertos, descubre eventos y ve tu vida musical en datos fascinantes.",
+    "heroDescription": "Registra los conciertos y festivales que has vivido. Colecciona recuerdos, ve estadísticas fascinantes y comparte tu historia musical.",
     "getStarted": "Empieza gratis",
     "signIn": "Iniciar sesión",
-    "featureCollectTitle": "Colecciona",
-    "featureCollectDescription": "Tu biblioteca de experiencias musicales, organizada y bonita.",
+    "featureCollectTitle": "Registra",
+    "featureCollectDescription": "Busca tu concierto, selecciona los artistas que viste y listo. Así de fácil.",
     "featureStatsTitle": "Estadísticas",
-    "featureStatsDescription": "Descubre datos fascinantes sobre tu vida musical.",
-    "featureDiscoverTitle": "Descubre",
-    "featureDiscoverDescription": "Encuentra conciertos próximos personalizados para ti."
+    "featureStatsDescription": "Descubre datos fascinantes que no sabías de tu vida musical en vivo.",
+    "featureShareTitle": "Comparte",
+    "featureShareDescription": "Genera tarjetas visuales de cada concierto para compartir en redes."
   },
   "editEvent": {
     "title": "Editar evento",

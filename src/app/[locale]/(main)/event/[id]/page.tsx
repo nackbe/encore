@@ -13,6 +13,7 @@ import {
   Music,
   Pencil,
   ListMusic,
+  Sparkles,
 } from 'lucide-react';
 import { DeleteEventButton } from '@/components/events/DeleteEventButton';
 
@@ -65,7 +66,18 @@ export default async function EventPage({
   const globalEvent = event.global_events;
   const venue = globalEvent?.venues ?? null;
 
-  const artists = event.user_event_artists ?? [];
+  const artists = (() => {
+    const raw = event.user_event_artists ?? [];
+    // Deduplicate by artist_id and sort alphabetically
+    const seen = new Set<string>();
+    return raw
+      .filter((ea) => {
+        if (seen.has(ea.artist_id)) return false;
+        seen.add(ea.artist_id);
+        return true;
+      })
+      .sort((a, b) => a.artists.name.localeCompare(b.artists.name));
+  })();
 
   const city = event.custom_event_city ?? venue?.city ?? '';
   const venueName = venue?.name ?? '';
@@ -163,6 +175,47 @@ export default async function EventPage({
         </div>
       )}
 
+      {/* Historic insights from Wikipedia */}
+      {globalEvent?.historic_badge_desc && (() => {
+        const insights = globalEvent.historic_badge_desc.split(' | ').map(raw => {
+          const trimmed = raw.trim();
+          // Extract [ArtistName] prefix if present
+          const artistMatch = trimmed.match(/^\[([^\]]+)\]\s*(.*)/);
+          const artist = artistMatch ? artistMatch[1] : null;
+          let text = artistMatch ? artistMatch[2] : trimmed;
+          // Clean up fragments: capitalize first letter, trim trailing incomplete sentences
+          if (text && /^[a-z]/.test(text)) {
+            text = text.charAt(0).toUpperCase() + text.slice(1);
+          }
+          return { artist, text };
+        }).filter(i => i.text.length > 15); // Skip very short fragments
+        if (insights.length === 0) return null;
+        return (
+          <section className="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <Sparkles className="h-4 w-4" />
+              {t('historicMoments')}
+              <span className="text-[10px] font-normal text-muted-foreground/60">(Wikipedia)</span>
+            </h2>
+            <ul className="mt-3 space-y-2.5">
+              {insights.map((insight, i) => (
+                <li key={i} className="flex gap-2.5 text-sm">
+                  <span className="mt-0.5 text-primary/60">&#8226;</span>
+                  <div>
+                    {insight.artist && (
+                      <span className="mr-1.5 inline-block rounded-md bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+                        {insight.artist}
+                      </span>
+                    )}
+                    <span className="text-muted-foreground">{insight.text}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
+
       {/* Memorable reason */}
       {event.is_memorable && event.memorable_reason && (
         <section className="mt-6">
@@ -179,6 +232,9 @@ export default async function EventPage({
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Music className="h-5 w-5" />
             {t('artistsSeen')}
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary">
+              {artists.length}
+            </span>
           </h2>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {artists.map((ea) => (

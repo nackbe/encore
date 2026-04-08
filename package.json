@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/types.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed:events": "tsx scripts/seed-events.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -32,6 +33,7 @@
     "@supabase/supabase-js": "^2.45.4",
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-query-devtools": "^5.56.2",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
@@ -58,6 +60,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^17.4.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.13",
     "jsdom": "^29.0.1",
@@ -65,6 +68,7 @@
     "sharp": "^0.34.5",
     "supabase": "^1.191.3",
     "tailwindcss": "^3.4.12",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.2",
     "vitest": "^4.1.2"
   },

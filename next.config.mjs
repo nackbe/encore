@@ -44,7 +44,7 @@ const nextConfig = {
               "default-src 'self'",
               `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://*.basemaps.cartocdn.com",
+              "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://*.basemaps.cartocdn.com https://assets.fanart.tv https://upload.wikimedia.org",
               "font-src 'self'",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
               "frame-ancestors 'none'",
@@ -79,6 +79,14 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "assets.fanart.tv",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
       },
     ],
   },

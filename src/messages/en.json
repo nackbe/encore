@@ -87,15 +87,21 @@
     "searchRequired": "You must search and select an event before continuing",
     "resultTypeEvent": "Event",
     "resultTypeArtist": "Artist",
+    "noResults": "We couldn't find that event",
+    "noResultsHint": "Try searching by artist name, or by festival name.",
     "noArtistsFound": "No artists found for this event.",
     "noArtistsHint": "You can search for artists in the previous step or continue without artists.",
     "artistsLabel": "Artists",
-    "selectedCount": "{count} selected"
+    "selectedCount": "{count} selected",
+    "filterArtists": "Filter artists..."
   },
   "collection": {
     "title": "My Collection",
     "eventsCount": "events",
     "artistsCount": "artists",
+    "citiesCount": "cities",
+    "countriesCount": "countries",
+    "registerCta": "I Was There",
     "allYears": "All",
     "searchPlaceholder": "Search artist, event or city...",
     "clearFilters": "Clear filters",
@@ -229,6 +235,7 @@
     "setlistComingSoon": "Setlist coming soon",
     "noSetlist": "Setlist not available",
     "historicBadge": "Historic milestone",
+    "historicMoments": "Historic moments",
     "editDetails": "Edit details",
     "artists": "Artists",
     "artistsSeen": "Artists you saw",
@@ -321,15 +328,15 @@
   },
   "landing": {
     "hero": "Your live music history",
-    "heroDescription": "Register your concerts, discover events, and see your music life in fascinating data.",
+    "heroDescription": "Log the concerts and festivals you've experienced. Collect memories, see fascinating stats, and share your live music story.",
     "getStarted": "Start for free",
     "signIn": "Sign in",
-    "featureCollectTitle": "Collect",
-    "featureCollectDescription": "Your library of musical experiences, organized and beautiful.",
+    "featureCollectTitle": "Register",
+    "featureCollectDescription": "Search your concert, select the artists you saw, and you're done. That easy.",
     "featureStatsTitle": "Stats",
-    "featureStatsDescription": "Discover fascinating insights about your music life.",
-    "featureDiscoverTitle": "Discover",
-    "featureDiscoverDescription": "Find upcoming concerts personalized for you."
+    "featureStatsDescription": "Discover fascinating insights you didn't know about your live music life.",
+    "featureShareTitle": "Share",
+    "featureShareDescription": "Generate visual cards for every concert to share on social media."
   },
   "editEvent": {
     "title": "Edit event",

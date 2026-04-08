@@ -13,6 +13,7 @@ import {
   MapPin,
   Star,
   Music,
+  Users,
   Pencil,
   Trash2,
   Check,
@@ -676,6 +677,7 @@ function GridCard({
             alt={name}
             fill
             className="object-cover transition-transform group-hover:scale-105"
+              style={{ objectPosition: '50% 15%' }}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
@@ -713,10 +715,16 @@ function GridCard({
           )}
         </div>
         {artists.length > 0 && (
-          <p className="mt-1.5 truncate text-xs text-muted-foreground">
-            {artists.slice(0, 3).map((a) => a.artists.name).join(', ')}
-            {artists.length > 3 && ` +${artists.length - 3}`}
-          </p>
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              <Users className="h-3 w-3" />
+              {artists.length}
+            </span>
+            <p className="truncate text-xs text-muted-foreground">
+              {artists.slice(0, 2).map((a) => a.artists.name).join(', ')}
+              {artists.length > 2 && ` +${artists.length - 2}`}
+            </p>
+          </div>
         )}
       </div>
     </div>
@@ -779,7 +787,7 @@ function ListItem({
         <p className="mt-0.5 text-xs text-muted-foreground">
           {formatEventDate(date, locale)}
           {city && ` · ${city}`}
-          {artists.length > 0 && ` · ${artists.map((a) => a.artists.name).join(', ')}`}
+          {artists.length > 0 && ` · ${artists.length} artistas`}
         </p>
       </div>
 
@@ -901,9 +909,16 @@ function TimelineView({
                       </div>
 
                       {artists.length > 0 && (
-                        <p className="mt-1 truncate text-xs text-muted-foreground/70">
-                          {artists.map((a) => a.artists.name).join(', ')}
-                        </p>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className="flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                            <Users className="h-2.5 w-2.5" />
+                            {artists.length}
+                          </span>
+                          <p className="truncate text-xs text-muted-foreground/70">
+                            {artists.slice(0, 3).map((a) => a.artists.name).join(', ')}
+                            {artists.length > 3 && ` +${artists.length - 3}`}
+                          </p>
+                        </div>
                       )}
                     </div>
                   </div>

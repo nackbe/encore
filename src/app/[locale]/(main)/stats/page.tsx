@@ -51,7 +51,12 @@ export default function StatsPage() {
   const { data: stats, isFetching } = useQuery({
     queryKey: ['user-stats', user?.id],
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes — avoid refetch on every mount
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
+      // Refresh token — don't block if it fails (session may still be valid)
+      try { await supabase.auth.refreshSession(); } catch {};
+
       const { data: events } = await supabase
         .from('user_events')
         .select(
@@ -104,6 +109,7 @@ export default function StatsPage() {
       const artistSeenCount: Record<string, number> = {};
       let firstRepeatFound = false;
       let firstFestivalFound = false;
+      let firstPerfectFound = false;
       const milestoneThresholds = [10, 25, 50, 100, 200, 500];
       let nextThresholdIdx = 0;
 
@@ -185,17 +191,15 @@ export default function StatsPage() {
           nextThresholdIdx++;
         }
 
-        // Perfect rating
-        if (event.rating === 5) {
-          // Only add the first perfect rating
-          if (!milestones.some((m) => m.label === 'milestonePerfectRating')) {
-            milestones.push({
-              icon: Star,
-              label: 'milestonePerfectRating',
-              detail: eventName,
-              date: eventDate,
-            });
-          }
+        // Perfect rating (track with flag to avoid O(n²) .some() scan)
+        if (event.rating === 5 && !firstPerfectFound) {
+          firstPerfectFound = true;
+          milestones.push({
+            icon: Star,
+            label: 'milestonePerfectRating',
+            detail: eventName,
+            date: eventDate,
+          });
         }
 
         // First repeat artist
@@ -229,7 +233,7 @@ export default function StatsPage() {
 
       const sortedGenres = Object.entries(genreCounts)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 8);
+        .slice(0, 20);
 
       const topArtistEntry = sortedArtists[0]?.[1];
       const mostSeenArtist =
@@ -270,7 +274,7 @@ export default function StatsPage() {
     },
   });
 
-  if (userLoading || isFetching) {
+  if (userLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -281,6 +285,14 @@ export default function StatsPage() {
   if (!user) {
     router.push(`/${locale}/login`);
     return null;
+  }
+
+  if (isFetching && !stats) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   if (!stats) {

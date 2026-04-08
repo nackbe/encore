@@ -10,6 +10,7 @@ function getHeaders(): HeadersInit {
   return {
     'x-api-key': apiKey,
     Accept: 'application/json',
+    'Accept-Language': 'es',
   };
 }
 
@@ -54,24 +55,48 @@ function parsePageResponse(data: unknown): SetlistFmPageResponse {
 
 // ─── API Methods ────────────────────────────────────────────────
 
+export interface SetlistSearchParams {
+  artistName?: string;
+  artistMbid?: string;
+  cityName?: string;
+  cityId?: string;
+  year?: string;
+  venueName?: string;
+  tourName?: string;
+  state?: string;
+  page?: number;
+}
+
 export async function searchSetlists(
-  artistName: string,
+  params: string | SetlistSearchParams,
   page = 1
 ): Promise<SetlistFmPageResponse> {
-  const params = new URLSearchParams({
-    artistName,
-    p: String(page),
-  });
+  // Support legacy string-only call (artistName)
+  const searchParams = typeof params === 'string'
+    ? { artistName: params, page }
+    : { ...params, page: params.page ?? page };
 
-  const response = await fetch(`${SETLISTFM_API_BASE}/search/setlists?${params}`, {
+  const urlParams = new URLSearchParams({ p: String(searchParams.page ?? 1) });
+  if (searchParams.artistName) urlParams.set('artistName', searchParams.artistName);
+  if (searchParams.artistMbid) urlParams.set('artistMbid', searchParams.artistMbid);
+  if (searchParams.cityName) urlParams.set('cityName', searchParams.cityName);
+  if (searchParams.year) urlParams.set('year', searchParams.year);
+  if (searchParams.venueName) urlParams.set('venueName', searchParams.venueName);
+  if (searchParams.tourName) urlParams.set('tourName', searchParams.tourName);
+  if (searchParams.cityId) urlParams.set('cityId', searchParams.cityId);
+  if (searchParams.state) urlParams.set('state', searchParams.state);
+
+  const response = await fetch(`${SETLISTFM_API_BASE}/search/setlists?${urlParams}`, {
     headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!response.ok) {
-    if (response.status === 404) {
-      return { setlist: [], total: 0, page: 1, itemsPerPage: 20 };
+    if (response.status !== 404) {
+      console.warn(`[setlistfm] searchSetlists ${response.status} ${response.statusText}`);
     }
-    throw new Error(`Setlist.fm search failed: ${response.status} ${response.statusText}`);
+    return { setlist: [], total: 0, page: 1, itemsPerPage: 20 };
   }
 
   const data: unknown = await response.json();
@@ -86,15 +111,96 @@ export async function getArtistSetlists(
 
   const response = await fetch(`${SETLISTFM_API_BASE}/artist/${mbid}/setlists?${params}`, {
     headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!response.ok) {
-    if (response.status === 404) {
-      return { setlist: [], total: 0, page: 1, itemsPerPage: 20 };
+    if (response.status !== 404) {
+      console.warn(`[setlistfm] getArtistSetlists ${response.status} ${response.statusText}`);
     }
-    throw new Error(
-      `Setlist.fm artist setlists failed: ${response.status} ${response.statusText}`
-    );
+    return { setlist: [], total: 0, page: 1, itemsPerPage: 20 };
+  }
+
+  const data: unknown = await response.json();
+  return parsePageResponse(data);
+}
+
+export interface SetlistFmArtist {
+  mbid: string;
+  name: string;
+  sortName: string;
+  disambiguation: string;
+}
+
+/** Search artists by name — returns first page of matches */
+export async function searchArtists(
+  artistName: string
+): Promise<SetlistFmArtist[]> {
+  const params = new URLSearchParams({ artistName, p: '1', sort: 'relevance' });
+
+  const response = await fetch(`${SETLISTFM_API_BASE}/search/artists?${params}`, {
+    headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(4000),
+  });
+
+  if (!response.ok) return [];
+
+  const data = await response.json() as { artist?: SetlistFmArtist[] };
+  return data.artist ?? [];
+}
+
+// ─── Venue Search & Setlists ───────────────────────────────────
+
+export interface SetlistFmVenue {
+  id: string;
+  name: string;
+  city?: {
+    id: string;
+    name: string;
+    state?: string;
+    stateCode?: string;
+    coords?: { lat: number; long: number };
+    country?: { code: string; name: string };
+  };
+}
+
+/** Search venues by name, optionally filtered by city */
+export async function searchVenues(name: string, cityName?: string): Promise<SetlistFmVenue[]> {
+  const params = new URLSearchParams({ name, p: '1' });
+  if (cityName) params.set('cityName', cityName);
+
+  const response = await fetch(`${SETLISTFM_API_BASE}/search/venues?${params}`, {
+    headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(4000),
+  });
+
+  if (!response.ok) return [];
+
+  const data = await response.json() as { venue?: SetlistFmVenue[] };
+  return data.venue ?? [];
+}
+
+/** Get setlists at a specific venue by venue ID */
+export async function getVenueSetlists(
+  venueId: string,
+  page = 1
+): Promise<SetlistFmPageResponse> {
+  const params = new URLSearchParams({ p: String(page) });
+
+  const response = await fetch(`${SETLISTFM_API_BASE}/venue/${venueId}/setlists?${params}`, {
+    headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5000),
+  });
+
+  if (!response.ok) {
+    if (response.status !== 404) {
+      console.warn(`[setlistfm] getVenueSetlists ${response.status} ${response.statusText}`);
+    }
+    return { setlist: [], total: 0, page: 1, itemsPerPage: 20 };
   }
 
   const data: unknown = await response.json();
@@ -104,6 +210,8 @@ export async function getArtistSetlists(
 export async function getSetlistDetail(setlistId: string): Promise<SetlistFmSetlist> {
   const response = await fetch(`${SETLISTFM_API_BASE}/setlist/${setlistId}`, {
     headers: getHeaders(),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5000),
   });
 
   if (!response.ok) {

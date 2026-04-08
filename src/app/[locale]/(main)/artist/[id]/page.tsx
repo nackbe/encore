@@ -125,7 +125,7 @@ export default async function ArtistPage({
           <h1 className="text-3xl font-bold tracking-tight">{artist.name}</h1>
 
           {/* Genres */}
-          {artist.genres.length > 0 && (
+          {artist.genres?.length > 0 && (
             <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
               {artist.genres.map((genre) => (
                 <span

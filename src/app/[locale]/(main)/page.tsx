@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
-import { Music, Disc3, BarChart3, MapPin } from 'lucide-react';
+import { Music, Disc3, BarChart3, Share2 } from 'lucide-react';
 
 interface HomePageProps {
   params: { locale: string };
@@ -15,7 +15,7 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect(`/${locale}/discover`);
+    redirect(`/${locale}/collection`);
   }
 
   const t = await getTranslations('landing');
@@ -66,10 +66,10 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
           </p>
         </div>
         <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 text-center">
-          <MapPin className="h-10 w-10 text-primary" />
-          <h3 className="mt-4 text-lg font-semibold">{t('featureDiscoverTitle')}</h3>
+          <Share2 className="h-10 w-10 text-primary" />
+          <h3 className="mt-4 text-lg font-semibold">{t('featureShareTitle')}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            {t('featureDiscoverDescription')}
+            {t('featureShareDescription')}
           </p>
         </div>
       </section>

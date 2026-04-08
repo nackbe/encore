@@ -35,10 +35,9 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { href: '/discover', labelKey: 'discover', icon: Compass },
   { href: '/collection', labelKey: 'collection', icon: Library },
-  { href: '/stats', labelKey: 'stats', icon: BarChart3 },
   { href: '/register', labelKey: 'register', icon: PlusCircle },
+  { href: '/stats', labelKey: 'stats', icon: BarChart3 },
 ];
 
 interface NavbarProps {
