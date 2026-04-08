@@ -494,14 +494,9 @@ export function RegisterFlow() {
     if (!user) return;
 
     try {
-      console.log('[submit] 1. Start — refreshing session');
-      // Refresh auth token in case it expired during idle time
-      const { error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError) {
-        console.error('[submit] Session expired:', refreshError.message);
-        toast({ title: tError('title'), description: 'Sesión expirada. Recarga la página.', variant: 'destructive' });
-        return;
-      }
+      console.log('[submit] 1. Start');
+      // Try to refresh auth token — don't block if it fails (session may still be valid)
+      try { await supabase.auth.refreshSession(); } catch {}
 
       let globalEventId = data.globalEventId;
 
