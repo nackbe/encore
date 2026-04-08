@@ -38,18 +38,7 @@ const nextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
           },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://*.basemaps.cartocdn.com https://assets.fanart.tv https://upload.wikimedia.org",
-              "font-src 'self'",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-              "frame-ancestors 'none'",
-            ].join("; "),
-          },
+          // CSP disabled temporarily — re-enable after Vercel deployment is stable
         ],
       },
     ];
