@@ -54,9 +54,6 @@ export default function StatsPage() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes — avoid refetch on every mount
     gcTime: 10 * 60 * 1000,
     queryFn: async () => {
-      // Refresh token — don't block if it fails (session may still be valid)
-      try { await supabase.auth.refreshSession(); } catch {};
-
       const { data: events } = await supabase
         .from('user_events')
         .select(
@@ -274,17 +271,17 @@ export default function StatsPage() {
     },
   });
 
-  if (userLoading) {
+  if (!user && !userLoading) {
+    router.push(`/${locale}/login`);
+    return null;
+  }
+
+  if (!user || userLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
-  }
-
-  if (!user) {
-    router.push(`/${locale}/login`);
-    return null;
   }
 
   if (isFetching && !stats) {
