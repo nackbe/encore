@@ -9,6 +9,10 @@ const intlMiddleware = createIntlMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
+  // Skip i18n for auth callback — Supabase redirects to /auth/callback directly
+  if (request.nextUrl.pathname.startsWith('/auth/callback')) {
+    return NextResponse.next();
+  }
   // Collect Supabase auth cookies that need to be set/removed
   const supabaseCookies: Array<{ name: string; value: string; options: CookieOptions }> = [];
 
