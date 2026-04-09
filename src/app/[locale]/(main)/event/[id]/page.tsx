@@ -118,9 +118,9 @@ export default async function EventPage({
         {t('backToCollection')}
       </Link>
 
-      {/* Event image */}
+      {/* Hero image — logo/brand for festivals, artist photo for concerts */}
       {heroImage && (
-        <div className={`relative overflow-hidden rounded-xl ${isFestival ? 'aspect-[3/4] max-h-[480px]' : 'aspect-video'}`}>
+        <div className="relative overflow-hidden rounded-xl aspect-video">
           <Image
             src={heroImage}
             alt={eventName}
@@ -132,14 +132,15 @@ export default async function EventPage({
         </div>
       )}
 
-      {/* Lineup poster (festivals only) */}
-      {lineupImage && (
-        <div className="mt-4 relative overflow-hidden rounded-xl aspect-[3/4] max-h-[600px]">
+      {/* Lineup poster (festivals only) — taller, scrollable */}
+      {lineupImage && lineupImage !== heroImage && (
+        <div className="mt-4 relative overflow-hidden rounded-xl">
           <Image
             src={lineupImage}
             alt={`${eventName} lineup`}
-            fill
-            className="object-contain bg-black/90"
+            width={800}
+            height={1200}
+            className="w-full h-auto rounded-xl"
             sizes="(max-width: 768px) 100vw, 768px"
           />
         </div>

@@ -77,10 +77,17 @@ function nameWords(festivalName: string): string[] {
   return normalize(festivalName).split(/\s+/).filter((w) => w.length >= 3 && !SKIP_WORDS.has(w));
 }
 
-function nameMatches(text: string, words: string[], minMatch: number): boolean {
+function nameMatches(text: string, words: string[], minMatch: number, festivalName: string): boolean {
   const normText = normalize(text);
+  const normFest = normalize(festivalName);
+
+  // Best case: the full festival name appears in the text
+  if (normText.includes(normFest)) return true;
+
+  // Otherwise require a higher threshold: at least 70% of words must match
   const matched = words.filter((w) => normText.includes(w));
-  return matched.length >= minMatch;
+  const threshold = Math.max(minMatch, Math.ceil(words.length * 0.7));
+  return matched.length >= threshold;
 }
 
 // ─── Logo image selection ───────────────────────────────────
@@ -93,8 +100,8 @@ function findLogoImage(results: DDGImageResult[], festivalName: string, year: nu
   for (const r of results) {
     const text = r.title + ' ' + r.source;
 
-    // Must mention festival name
-    if (!nameMatches(text, words, minMatch)) continue;
+    // Must mention festival name (strict: full name or 70%+ words)
+    if (!nameMatches(text, words, minMatch, festivalName)) continue;
 
     // Must be reasonable resolution
     if (r.width < 400 || r.height < 300) continue;
@@ -123,8 +130,8 @@ function findLineupImage(results: DDGImageResult[], festivalName: string, year: 
   for (const r of results) {
     const text = normalize(r.title + ' ' + r.source);
 
-    // Must mention festival name
-    if (!nameMatches(r.title + ' ' + r.source, words, minMatch)) continue;
+    // Must mention festival name (strict: full name or 70%+ words)
+    if (!nameMatches(r.title + ' ' + r.source, words, minMatch, festivalName)) continue;
 
     // Must mention lineup/cartel keyword
     if (!/lineup|line-up|cartel|afiche|artistas|artists|line up/.test(text)) continue;

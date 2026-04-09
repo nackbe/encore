@@ -99,7 +99,7 @@ export default async function GlobalEventPage({
           : (artists[0]?.artists?.image_url ?? event.poster_url ?? null);
         if (!img) return null;
         return (
-          <div className={`relative overflow-hidden rounded-xl ${isFest ? 'aspect-[3/4] max-h-[480px]' : 'aspect-video'}`}>
+          <div className="relative overflow-hidden rounded-xl aspect-video">
             <Image
               src={img}
               alt={event.name}
