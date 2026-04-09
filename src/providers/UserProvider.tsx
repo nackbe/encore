@@ -36,7 +36,29 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         if (!mountedRef.current) return;
 
-        if (profileError) {
+        if (profileError && profileError.code === 'PGRST116') {
+          // Profile doesn't exist (e.g. new Google OAuth user) — create it
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const displayName = authUser?.user_metadata?.full_name
+            ?? authUser?.user_metadata?.name
+            ?? authUser?.email?.split('@')[0]
+            ?? 'User';
+
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .upsert({ id: userId, display_name: displayName }, { onConflict: 'id' })
+            .select('*')
+            .single();
+
+          if (!mountedRef.current) return;
+          if (insertError) {
+            console.warn('[UserProvider] Profile create error:', insertError.message);
+            setProfile(null);
+          } else {
+            setProfile(newProfile);
+            setError(null);
+          }
+        } else if (profileError) {
           console.warn('[UserProvider] Profile fetch error:', profileError.message);
           setProfile(null);
         } else {
