@@ -21,19 +21,19 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
   const t = await getTranslations('landing');
 
   return (
-    <div className="flex flex-col">
-      {/* Hero */}
-      <section className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <Music className="h-10 w-10 text-primary" />
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4">
+      {/* Hero + Features in one centered block */}
+      <div className="flex w-full max-w-3xl flex-col items-center text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <Music className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="mt-8 text-4xl font-extrabold tracking-tight sm:text-6xl">
+        <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">
           Encore
         </h1>
-        <p className="mt-4 max-w-xl text-lg text-muted-foreground">
+        <p className="mt-3 max-w-md text-base text-muted-foreground">
           {t('heroDescription')}
         </p>
-        <div className="mt-8 flex gap-4">
+        <div className="mt-6 flex gap-3">
           <Link
             href={`/${locale}/signup`}
             className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
@@ -47,32 +47,32 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
             {t('signIn')}
           </Link>
         </div>
-      </section>
 
-      {/* Features */}
-      <section className="mx-auto grid max-w-5xl gap-8 px-4 py-20 sm:grid-cols-3">
-        <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 text-center">
-          <Disc3 className="h-10 w-10 text-primary" />
-          <h3 className="mt-4 text-lg font-semibold">{t('featureCollectTitle')}</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t('featureCollectDescription')}
-          </p>
+        {/* Features */}
+        <div className="mt-14 grid w-full gap-4 sm:grid-cols-3">
+          <div className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center">
+            <Disc3 className="h-8 w-8 text-primary" />
+            <h3 className="mt-3 text-sm font-semibold">{t('featureCollectTitle')}</h3>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {t('featureCollectDescription')}
+            </p>
+          </div>
+          <div className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center">
+            <BarChart3 className="h-8 w-8 text-primary" />
+            <h3 className="mt-3 text-sm font-semibold">{t('featureStatsTitle')}</h3>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {t('featureStatsDescription')}
+            </p>
+          </div>
+          <div className="flex flex-col items-center rounded-xl border border-border bg-card p-5 text-center">
+            <Share2 className="h-8 w-8 text-primary" />
+            <h3 className="mt-3 text-sm font-semibold">{t('featureShareTitle')}</h3>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {t('featureShareDescription')}
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 text-center">
-          <BarChart3 className="h-10 w-10 text-primary" />
-          <h3 className="mt-4 text-lg font-semibold">{t('featureStatsTitle')}</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t('featureStatsDescription')}
-          </p>
-        </div>
-        <div className="flex flex-col items-center rounded-xl border border-border bg-card p-6 text-center">
-          <Share2 className="h-10 w-10 text-primary" />
-          <h3 className="mt-4 text-lg font-semibold">{t('featureShareTitle')}</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t('featureShareDescription')}
-          </p>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }
