@@ -779,6 +779,23 @@ export function RegisterFlow() {
                 <p className="text-xs text-red-500">{t('searchRequired')}</p>
               )}
 
+              {/* Search examples — shown when search is empty */}
+              {!searchQuery && !watch('name') && (
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-xs text-muted-foreground">{t('searchExamples')}:</span>
+                  {['Linkin Park Bogotá', 'Coldplay 2024', 'Lollapalooza Chile', 'Bad Bunny Medellín 2023'].map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      onClick={() => handleSearchChange(ex)}
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="name">{t('eventName')}</Label>

@@ -84,6 +84,7 @@
     "duplicateRegisterOther": "Register another",
     "next": "Next",
     "back": "Back",
+    "searchExamples": "E.g.",
     "searchRequired": "You must search and select an event before continuing",
     "resultTypeEvent": "Event",
     "resultTypeArtist": "Artist",
