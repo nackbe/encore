@@ -44,7 +44,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://assets.fanart.tv https://upload.wikimedia.org",
+              "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.spotify.com https://accounts.spotify.com https://musicbrainz.org https://api.setlist.fm https://app.ticketmaster.com",
               "frame-src 'self' https://*.supabase.co",
@@ -61,35 +61,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "i.scdn.co",
-      },
-      {
-        protocol: "https",
-        hostname: "s1.ticketm.net",
-      },
-      {
-        protocol: "https",
-        hostname: "images.universe.com",
-      },
-      {
-        protocol: "https",
-        hostname: "via.placeholder.com",
-      },
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "assets.fanart.tv",
-      },
-      {
-        protocol: "https",
-        hostname: "upload.wikimedia.org",
+        hostname: "**",
       },
     ],
   },

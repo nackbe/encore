@@ -8,7 +8,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { profileSchema, passwordChangeSchema } from '@/lib/validations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Check, Music, Globe } from 'lucide-react';
+import { Loader2, Check, Globe } from 'lucide-react';
 
 const GENRE_OPTIONS = [
   'rock',
@@ -244,22 +244,6 @@ export default function SettingsPage() {
             >
               English
             </button>
-          </div>
-        </section>
-
-        {/* Spotify connection */}
-        <section>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <Music className="h-5 w-5" />
-            {t('spotifyConnection')}
-          </h2>
-          <div className="mt-4 rounded-lg border border-border bg-card p-4">
-            <p className="text-sm text-muted-foreground">
-              {t('spotifyNotConnected')}
-            </p>
-            <Button type="button" variant="secondary" className="mt-3" size="sm">
-              {t('connectSpotify')}
-            </Button>
           </div>
         </section>
 

@@ -12,7 +12,6 @@ import {
   Star,
   Music,
   Pencil,
-  ListMusic,
   Sparkles,
 } from 'lucide-react';
 import { DeleteEventButton } from '@/components/events/DeleteEventButton';
@@ -280,16 +279,6 @@ export default async function EventPage({
         </section>
       )}
 
-      {/* Setlist placeholder */}
-      <section className="mt-8">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <ListMusic className="h-5 w-5" />
-          {t('setlist')}
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t('setlistComingSoon')}
-        </p>
-      </section>
     </div>
   );
 }
