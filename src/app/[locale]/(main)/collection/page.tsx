@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { getTranslations, getLocale } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { CollectionGrid } from '@/components/collection/CollectionGrid';
-import { Music, Users, MapPin, Globe, PlusCircle } from 'lucide-react';
+import { CollectionInsights } from '@/components/collection/CollectionInsights';
+import { PlusCircle } from 'lucide-react';
 import type { UserEvent, Venue, Artist, UserEventArtist, GlobalEvent } from '@/lib/supabase/types';
 
 type UserEventWithJoins = UserEvent & {
@@ -44,26 +45,6 @@ export default async function CollectionPage() {
 
   const events = userEvents ?? [];
 
-  // Compute stats
-  const uniqueArtistIds = new Set<string>();
-  const uniqueCities = new Set<string>();
-  const uniqueCountries = new Set<string>();
-
-  events.forEach((event) => {
-    event.user_event_artists?.forEach((ea) => uniqueArtistIds.add(ea.artist_id));
-    const city = event.custom_event_city ?? event.global_events?.venues?.city;
-    const country = event.global_events?.country;
-    if (city) uniqueCities.add(city);
-    if (country) uniqueCountries.add(country);
-  });
-
-  const counters = [
-    { value: events.length, label: t('eventsCount'), icon: Music, color: 'text-primary' },
-    { value: uniqueArtistIds.size, label: t('artistsCount'), icon: Users, color: 'text-secondary' },
-    { value: uniqueCities.size, label: t('citiesCount'), icon: MapPin, color: 'text-primary' },
-    { value: uniqueCountries.size, label: t('countriesCount'), icon: Globe, color: 'text-secondary' },
-  ];
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       {/* Header */}
@@ -80,23 +61,8 @@ export default async function CollectionPage() {
         </Link>
       </div>
 
-      {/* Counters */}
-      {events.length > 0 && (
-        <div className="mt-5 grid grid-cols-4 gap-3">
-          {counters.map((c) => (
-            <div
-              key={c.label}
-              className="flex flex-col items-center rounded-xl border border-border bg-card p-3 text-center"
-            >
-              <c.icon className={`h-4 w-4 ${c.color}`} />
-              <span className="mt-1.5 text-2xl font-bold tabular-nums">{c.value}</span>
-              <span className="mt-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-                {c.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Insights: artist cloud, genres, badges */}
+      <CollectionInsights events={events} />
 
       {/* Events grid with filters */}
       <div className="mt-6">

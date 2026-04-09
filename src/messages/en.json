@@ -123,7 +123,21 @@
     "emptyCollection": "Your collection is empty",
     "emptyCollectionCta": "Register your first concert!",
     "noResults": "No results found",
-    "moreGenres": "More genres"
+    "moreGenres": "More genres",
+    "insightsTitle": "My Insights",
+    "topArtists": "Top Artists",
+    "topGenresTitle": "My Genres",
+    "badgesTitle": "Achievements",
+    "badgeMilestone": "{count}+ Events",
+    "badgeMilestoneDesc": "You've attended {count} or more live events!",
+    "badgeArtists": "{count}+ Artists",
+    "badgeArtistsDesc": "You've seen {count} or more unique artists live!",
+    "badgeSuperfan": "Superfan x{count}",
+    "badgeSuperfanDesc": "You've seen one or more artists 3+ times",
+    "badgeExplorer": "{count} Countries",
+    "badgeExplorerDesc": "Your music has taken you across borders",
+    "badgeFestivalLover": "{count} Festivals",
+    "badgeFestivalLoverDesc": "You're a true festival-goer"
   },
   "discover": {
     "title": "Discover",
