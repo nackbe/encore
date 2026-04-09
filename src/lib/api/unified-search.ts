@@ -161,12 +161,12 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
     .limit(10) as unknown as { data: LocalEventRow[] | null };
 
   // Search 2: By artist name → find festivals/events where that artist performed
-  // Two-step approach because Supabase can't filter parent rows by embedded relation values
-  // Step 2a: Find matching artist IDs
+  // Use name_normalized for faster search (no diacritics, lowercase)
+  const normalizedQuery = textQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const { data: matchingArtists } = await supabase
     .from('artists')
     .select('id')
-    .ilike('name', `%${textQuery}%`)
+    .ilike('name_normalized', `%${normalizedQuery}%`)
     .limit(5) as unknown as { data: Array<{ id: string }> | null };
 
   let byArtistEvents: LocalEventRow[] = [];

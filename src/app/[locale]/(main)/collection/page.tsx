@@ -4,7 +4,8 @@ import { getTranslations, getLocale } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { CollectionGrid } from '@/components/collection/CollectionGrid';
 import { CollectionInsights } from '@/components/collection/CollectionInsights';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Share2 } from 'lucide-react';
+import { ShareCollectionButton } from '@/components/collection/ShareCollectionButton';
 import type { UserEvent, Venue, Artist, UserEventArtist, GlobalEvent } from '@/lib/supabase/types';
 
 type UserEventWithJoins = UserEvent & {
@@ -52,13 +53,16 @@ export default async function CollectionPage() {
         <h1 className="text-2xl font-bold tracking-tight">
           {t('title')}
         </h1>
-        <Link
-          href={`/${locale}/register`}
-          className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 active:scale-95"
-        >
-          <PlusCircle className="h-4 w-4" />
-          {t('registerCta')}
-        </Link>
+        <div className="flex items-center gap-2">
+          {events.length > 0 && <ShareCollectionButton userId={user.id} />}
+          <Link
+            href={`/${locale}/register`}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 active:scale-95"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {t('registerCta')}
+          </Link>
+        </div>
       </div>
 
       {events.length === 0 ? (

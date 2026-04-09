@@ -1,12 +1,12 @@
 /**
- * Batch-enrich artists: images from Spotify + genres from MusicBrainz.
+ * Batch-enrich artists: images from fanart.tv (primary) + Spotify (fallback) + genres from MusicBrainz.
  *
  * Usage: npx tsx scripts/seed/run-artist-images.ts [--limit N] [--dry-run] [--genres-only]
  *
- * --genres-only: Skip Spotify image fetch, only fetch MusicBrainz genres for artists missing them
+ * --genres-only: Skip image fetch, only fetch MusicBrainz genres for artists missing them
  *
- * Processes artists in batches of 3, with 1.5s delay between batches
- * to stay within Spotify/MusicBrainz rate limits.
+ * Image cascade: fanart.tv (by MBID) → Spotify search (fallback)
+ * Processes sequentially with MusicBrainz 1req/s rate limit.
  */
 
 import 'dotenv/config';
@@ -22,10 +22,45 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-// ─── Spotify ──────────────────────────────────────────────────
+// ─── fanart.tv (primary image source) ─────────────────────────
+
+const FANART_API_KEY = process.env.FANART_API_KEY ?? '';
+
+async function searchFanart(mbid: string): Promise<string | null> {
+  if (!FANART_API_KEY || !mbid) return null;
+  try {
+    const res = await fetch(
+      `https://webservice.fanart.tv/v3/music/${mbid}?api_key=${FANART_API_KEY}`,
+      { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as {
+      artistthumb?: Array<{ url: string; likes: string }>;
+      hdmusiclogo?: Array<{ url: string; likes: string }>;
+      artistbackground?: Array<{ url: string; likes: string }>;
+    };
+    // Prefer artistthumb (clean portrait), then background
+    const thumbs = data.artistthumb ?? [];
+    if (thumbs.length > 0) {
+      const sorted = [...thumbs].sort((a, b) => Number(b.likes) - Number(a.likes));
+      return sorted[0].url;
+    }
+    const bgs = data.artistbackground ?? [];
+    if (bgs.length > 0) {
+      const sorted = [...bgs].sort((a, b) => Number(b.likes) - Number(a.likes));
+      return sorted[0].url;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Spotify (fallback image source) ─────────────────────────
 
 let spotifyToken: string | null = null;
 let tokenExpiry = 0;
+let spotifyDisabled = false;
 
 async function getSpotifyToken(): Promise<string> {
   if (spotifyToken && Date.now() < tokenExpiry) return spotifyToken;
@@ -63,8 +98,12 @@ async function searchSpotify(name: string): Promise<string | null> {
   });
 
   if (res.status === 429) {
-    // Spotify rate limit — wait max 30s then retry (ignore absurd values)
     const raw = parseInt(res.headers.get('retry-after') ?? '5', 10);
+    if (raw > 60) {
+      console.log(`\n  Spotify rate limited (${raw}s) — disabling Spotify for this run`);
+      spotifyDisabled = true;
+      return null;
+    }
     const retryAfter = Math.min(raw, 30);
     console.log(`\n  Rate limited (retry-after: ${raw}s), waiting ${retryAfter}s...`);
     await new Promise(r => setTimeout(r, retryAfter * 1000));
@@ -196,12 +235,13 @@ async function main() {
   if (dryRun) { console.log('DRY RUN — exiting'); return; }
 
   if (!genresOnly) {
+    console.log(`fanart.tv: ${FANART_API_KEY ? '✓ key found' : '✗ no key (skipping)'}`);
     try {
       await getSpotifyToken();
-      console.log('✓ Spotify connected');
+      console.log('Spotify: ✓ connected (fallback)');
     } catch (e) {
-      console.error('✗ Spotify auth failed:', (e as Error).message);
-      process.exit(1);
+      console.log('Spotify: ✗ auth failed (fanart.tv only)', (e as Error).message);
+      spotifyDisabled = true;
     }
   }
 
@@ -226,32 +266,40 @@ async function main() {
         try {
           const update: Record<string, unknown> = {};
 
-          // ── Image (Spotify) ──
-          if (!genresOnly && !artist.image_url) {
-            const imageUrl = await searchSpotify(artist.name);
-            if (imageUrl) {
-              update.image_url = imageUrl;
-              imagesFound++;
+          // ── Genres (MusicBrainz) — do first to get MBID for fanart.tv ──
+          let mbid = artist.musicbrainz_id;
+          const needsGenres = !artist.genres || artist.genres.length === 0;
+
+          if (!mbid) {
+            mbid = await searchMBArtist(artist.name);
+            if (mbid) update.musicbrainz_id = mbid;
+          }
+
+          if (needsGenres && mbid) {
+            const genres = await fetchMBGenres(mbid);
+            if (genres.length > 0) {
+              update.genres = genres;
+              genresFound++;
             }
           }
 
-          // ── Genres (MusicBrainz) ──
-          const needsGenres = !artist.genres || artist.genres.length === 0;
-          if (needsGenres) {
-            let mbid = artist.musicbrainz_id;
+          // ── Image: fanart.tv (primary) → Spotify (fallback) ──
+          if (!genresOnly && !artist.image_url) {
+            let imageUrl: string | null = null;
 
-            // If no MBID stored, search MB for one
-            if (!mbid) {
-              mbid = await searchMBArtist(artist.name);
-              if (mbid) update.musicbrainz_id = mbid;
+            // Try fanart.tv first (needs MBID)
+            if (mbid) {
+              imageUrl = await searchFanart(mbid);
             }
 
-            if (mbid) {
-              const genres = await fetchMBGenres(mbid);
-              if (genres.length > 0) {
-                update.genres = genres;
-                genresFound++;
-              }
+            // Fallback to Spotify if fanart.tv didn't have it
+            if (!imageUrl && !spotifyDisabled) {
+              imageUrl = await searchSpotify(artist.name);
+            }
+
+            if (imageUrl) {
+              update.image_url = imageUrl;
+              imagesFound++;
             }
           }
 
