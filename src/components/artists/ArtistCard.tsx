@@ -74,7 +74,7 @@ export function ArtistCard({
 
       {/* Info */}
       <div className="p-3">
-        <h4 className="truncate text-sm font-semibold">{artist.name}</h4>
+        <h4 className="line-clamp-2 text-sm font-semibold" title={artist.name}>{artist.name}</h4>
         {artist.genres.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {artist.genres.slice(0, 2).map((genre) => (
