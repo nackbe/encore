@@ -583,19 +583,29 @@ export async function unifiedEventSearch(query: string): Promise<UnifiedSearchRe
         const r = await searchSetlists({ artistName: parsed.text, year: parsed.year });
         allSetlists.push(...r.setlist);
       } else if (parsed.year) {
-        // "the cure 2016" → MBID lookup for precision
-        const artists = await searchSFMArtists(parsed.text);
+        // Smart location detection with year: "bad bunny medellin 2023"
+        const { text: sfmTextY, location: sfmLocationY } = parseLocationFromQuery(parsed.text);
+        const searchTextY = sfmLocationY ? sfmTextY : parsed.text;
+
+        const artists = await searchSFMArtists(searchTextY);
         if (artists.length > 0) {
-          const r = await searchSetlists({ artistMbid: artists[0].mbid, year: parsed.year });
+          const opts: Record<string, string> = { artistMbid: artists[0].mbid, year: parsed.year };
+          if (sfmLocationY) opts.cityName = sfmLocationY;
+          const r = await searchSetlists(opts as any);
           allSetlists.push(...r.setlist);
+
+          // If location filter was too strict, retry without it
+          if (allSetlists.length === 0 && sfmLocationY) {
+            const r2 = await searchSetlists({ artistMbid: artists[0].mbid, year: parsed.year });
+            allSetlists.push(...r2.setlist);
+          }
         } else {
-          const r = await searchSetlists({ artistName: parsed.text, year: parsed.year });
+          const r = await searchSetlists({ artistName: searchTextY, year: parsed.year });
           allSetlists.push(...r.setlist);
         }
 
-        // If no results, try last word as city
-        // "foo fighters bogota 2019" → artist="foo fighters", city="bogota", year=2019
-        if (allSetlists.length === 0) {
+        // Last resort: split last word as city
+        if (allSetlists.length === 0 && !sfmLocationY) {
           const words = parsed.text.split(/\s+/);
           if (words.length >= 2) {
             const maybeCity = words[words.length - 1];
@@ -605,22 +615,44 @@ export async function unifiedEventSearch(query: string): Promise<UnifiedSearchRe
           }
         }
       } else {
-        // Simple artist search: "radiohead", "alcoli" → MBID lookup for fuzzy matching
-        const artists = await searchSFMArtists(parsed.text);
-        console.log(`[search] SFM artist lookup "${parsed.text}" → ${artists.length} artists${artists.length > 0 ? ` (best: "${artists[0].name}", mbid: ${artists[0].mbid})` : ''}`);
-        if (artists.length > 0) {
-          const r = await searchSetlists({ artistMbid: artists[0].mbid });
-          allSetlists.push(...r.setlist);
-        }
-        // Also try by name (catches cases where artist search misses but setlist search works)
-        if (allSetlists.length === 0) {
-          const r = await searchSetlists({ artistName: parsed.text });
-          allSetlists.push(...r.setlist);
+        // Smart location detection: "bad bunny medellin" → artist="bad bunny", city="medellin"
+        const { text: sfmText, location: sfmLocation } = parseLocationFromQuery(parsed.text);
+        const searchArtistText = sfmLocation ? sfmText : parsed.text;
+
+        // If location detected, search artist + city directly first
+        if (sfmLocation) {
+          console.log(`[search] SFM location detected: artist="${sfmText}", city="${sfmLocation}"`);
+          const artists = await searchSFMArtists(sfmText);
+          if (artists.length > 0) {
+            const r = await searchSetlists({ artistMbid: artists[0].mbid, cityName: sfmLocation });
+            allSetlists.push(...r.setlist);
+            // Also search without city for more results
+            if (allSetlists.length < 3) {
+              const r2 = await searchSetlists({ artistMbid: artists[0].mbid });
+              allSetlists.push(...r2.setlist);
+            }
+          } else {
+            const r = await searchSetlists({ artistName: sfmText, cityName: sfmLocation });
+            allSetlists.push(...r.setlist);
+          }
         }
 
-        // If no results, try splitting last word as city
-        // "foo fighters bogota" → artist="foo fighters", city="bogota"
+        // Standard artist search (no location or as fallback)
         if (allSetlists.length === 0) {
+          const artists = await searchSFMArtists(searchArtistText);
+          console.log(`[search] SFM artist lookup "${searchArtistText}" → ${artists.length} artists${artists.length > 0 ? ` (best: "${artists[0].name}", mbid: ${artists[0].mbid})` : ''}`);
+          if (artists.length > 0) {
+            const r = await searchSetlists({ artistMbid: artists[0].mbid });
+            allSetlists.push(...r.setlist);
+          }
+          if (allSetlists.length === 0) {
+            const r = await searchSetlists({ artistName: searchArtistText });
+            allSetlists.push(...r.setlist);
+          }
+        }
+
+        // Last resort: split last word as city
+        if (allSetlists.length === 0 && !sfmLocation) {
           const words = parsed.text.split(/\s+/);
           if (words.length >= 2) {
             const maybeCity = words[words.length - 1];
