@@ -105,6 +105,9 @@ export function RegisterFlow() {
   const [searchError, setSearchError] = React.useState(false);
   // Track when search returned zero results (for fallback suggestions)
   const [noResults, setNoResults] = React.useState(false);
+  // Whether the search dropdown is open (close on outside click)
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -124,6 +127,17 @@ export function RegisterFlow() {
   });
 
   const selectedArtistIds = watch('artistIds');
+
+  // Close dropdown on click outside
+  React.useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Debounced search with abort controller
   const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
@@ -205,6 +219,7 @@ export function RegisterFlow() {
         // Show event results immediately — don't wait for artist search
         if (!controller.signal.aborted) {
           setSearchResults(results);
+          setDropdownOpen(results.length > 0);
           setNoResults(results.length === 0);
           setIsSearching(results.length === 0); // keep spinner only if no events yet
         }
@@ -218,15 +233,19 @@ export function RegisterFlow() {
             .limit(5);
 
           if (!controller.signal.aborted && artists?.length) {
-            setSearchResults((prev) => [
-              ...prev,
-              ...artists.map((a) => ({
-                id: a.id,
-                name: a.name,
-                type: 'artist' as const,
-                subtitle: (a.genres as string[])?.slice(0, 2).join(', ') || 'Artist',
-              })),
-            ]);
+            setSearchResults((prev) => {
+              const updated = [
+                ...prev,
+                ...artists.map((a) => ({
+                  id: a.id,
+                  name: a.name,
+                  type: 'artist' as const,
+                  subtitle: (a.genres as string[])?.slice(0, 2).join(', ') || 'Artist',
+                })),
+              ];
+              if (updated.length > 0) setDropdownOpen(true);
+              return updated;
+            });
           }
         } catch {
           // Artist search failure is non-critical — continue with event results
@@ -258,6 +277,7 @@ export function RegisterFlow() {
 
   function handleResultSelect(result: SearchResult) {
     // Close dropdown and show selection immediately
+    setDropdownOpen(false);
     setSearchResults([]);
     setSearchQuery(result.name);
     setIsSearching(false);
@@ -705,7 +725,7 @@ export function RegisterFlow() {
               <CardTitle>{t('searchPlaceholder').replace('...', '')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="relative">
+              <div className="relative" ref={searchContainerRef}>
                 <Search className={cn(
                   'absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2',
                   searchError ? 'text-red-500' : 'text-muted-foreground'
@@ -713,10 +733,11 @@ export function RegisterFlow() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
+                  onFocus={() => { if (searchResults.length > 0) setDropdownOpen(true); }}
                   placeholder={t('searchPlaceholder')}
                   className={cn('pl-10', searchError && 'border-red-500 focus:border-red-500 focus:ring-red-500')}
                 />
-                {searchResults.length > 0 && (
+                {dropdownOpen && searchResults.length > 0 && (
                   <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-60 overflow-y-auto rounded-md border bg-popover shadow-lg">
                     {searchResults.map((result) => {
                       const sourceBadge = result.unified?.source;

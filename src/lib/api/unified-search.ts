@@ -779,13 +779,38 @@ export async function unifiedEventSearch(query: string): Promise<UnifiedSearchRe
 
   const deduplicated = deduplicateResults(allResults);
 
-  deduplicated.sort((a, b) => {
+  // Post-filter: if user searched with a location, prioritize matching results
+  const { location: queryLocation } = parseLocationFromQuery(parsed.text);
+  let filtered = deduplicated;
+  if (queryLocation) {
+    const locNorm = queryLocation.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const matching = deduplicated.filter(r => {
+      const city = (r.city ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const country = (r.country ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return city.includes(locNorm) || country.includes(locNorm) || locNorm.includes(city) || locNorm.includes(country);
+    });
+    // If we have location-matched results, show those first; otherwise show all
+    if (matching.length > 0) {
+      const nonMatching = deduplicated.filter(r => !matching.includes(r));
+      filtered = [...matching, ...nonMatching];
+    }
+  }
+
+  filtered.sort((a, b) => {
+    // If location filter active, keep location-matched results at top
+    if (queryLocation) {
+      const locNorm = queryLocation.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const aMatch = ((a.city ?? '') + (a.country ?? '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(locNorm);
+      const bMatch = ((b.city ?? '') + (b.country ?? '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(locNorm);
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+    }
     if (a.source === 'local' && b.source !== 'local') return -1;
     if (a.source !== 'local' && b.source === 'local') return 1;
     return (b.date ?? '').localeCompare(a.date ?? '');
   });
 
-  const final = deduplicated.slice(0, 20);
+  const final = filtered.slice(0, 20);
   console.log(`[search] Total: ${final.length} results in ${Date.now() - globalStart}ms (errors: ${errors.length})`);
 
   return { results: final, errors };
