@@ -127,7 +127,7 @@ export default async function EventPage({
                 src={heroImage}
                 alt={eventName}
                 fill
-                className="object-contain bg-black/90"
+                className="object-cover"
                 sizes="(max-width: 768px) 50vw, 384px"
               />
             </div>
@@ -136,7 +136,7 @@ export default async function EventPage({
                 src={lineupImage}
                 alt={`${eventName} lineup`}
                 fill
-                className="object-contain bg-black/90"
+                className="object-cover"
                 sizes="(max-width: 768px) 50vw, 384px"
               />
             </div>
