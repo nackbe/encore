@@ -65,55 +65,16 @@ async function searchDDGImages(query: string): Promise<DDGImageResult[]> {
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────
+// ─── Image selection ───────────────────────────────────────
 
-function normalize(s: string): string {
-  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-const SKIP_WORDS = new Set(['the', 'festival', 'fest', 'de', 'del', 'los', 'las', 'and', 'at', 'in', 'en']);
-
-function nameWords(festivalName: string): string[] {
-  return normalize(festivalName).split(/\s+/).filter((w) => w.length >= 3 && !SKIP_WORDS.has(w));
-}
-
-function nameMatches(text: string, words: string[], minMatch: number, festivalName: string): boolean {
-  const normText = normalize(text);
-  const normFest = normalize(festivalName);
-
-  // Best case: the full festival name appears in the text
-  if (normText.includes(normFest)) return true;
-
-  // Otherwise require a higher threshold: at least 70% of words must match
-  const matched = words.filter((w) => normText.includes(w));
-  const threshold = Math.max(minMatch, Math.ceil(words.length * 0.7));
-  return matched.length >= threshold;
-}
-
-// ─── Logo image selection ───────────────────────────────────
-
-function findLogoImage(results: DDGImageResult[], festivalName: string, year: number): string | null {
-  const words = nameWords(festivalName);
-  const minMatch = Math.min(2, words.length);
-  const yearStr = String(year);
-
+function findBestImage(results: DDGImageResult[], minW = 300, minH = 200): string | null {
+  // Trust the DDG query — just pick the first image with reasonable size
+  // and skip obvious icons/favicons
   for (const r of results) {
-    const text = r.title + ' ' + r.source;
+    if (r.width < minW || r.height < minH) continue;
 
-    // Must mention festival name (strict: full name or 70%+ words)
-    if (!nameMatches(text, words, minMatch, festivalName)) continue;
-
-    // Must be reasonable resolution
-    if (r.width < 400 || r.height < 300) continue;
-
-    // Reject tiny icons/favicons
     const url = r.image.toLowerCase();
-    if (url.includes('favicon') || url.includes('icon') || url.includes('avatar')) continue;
-
-    // Prefer landscape or square (logos, brand images, stage photos)
-    // Accept anything that's not extremely tall/narrow
-    const ratio = r.width / r.height;
-    if (ratio < 0.5) continue; // reject very tall/narrow
+    if (url.includes('favicon') || url.includes('icon16') || url.includes('avatar')) continue;
 
     return r.image;
   }
@@ -122,36 +83,6 @@ function findLogoImage(results: DDGImageResult[], festivalName: string, year: nu
 
 // ─── Lineup image selection ─────────────────────────────────
 
-function findLineupImage(results: DDGImageResult[], festivalName: string, year: number): string | null {
-  const words = nameWords(festivalName);
-  const minMatch = Math.min(2, words.length);
-  const yearStr = String(year);
-
-  for (const r of results) {
-    const text = normalize(r.title + ' ' + r.source);
-
-    // Must mention festival name (strict: full name or 70%+ words)
-    if (!nameMatches(r.title + ' ' + r.source, words, minMatch, festivalName)) continue;
-
-    // Must mention lineup/cartel keyword
-    if (!/lineup|line-up|cartel|afiche|artistas|artists|line up/.test(text)) continue;
-
-    // Must be reasonable resolution
-    if (r.width < 500 || r.height < 500) continue;
-
-    // Reject icons
-    const url = r.image.toLowerCase();
-    if (url.includes('favicon') || url.includes('logo') || url.includes('icon') || url.includes('avatar')) continue;
-
-    // Lineup posters: portrait or square preferred, but accept landscape too (some cartels are wide)
-    // Just reject extreme landscapes
-    const ratio = r.width / r.height;
-    if (ratio > 2.0) continue;
-
-    return r.image;
-  }
-  return null;
-}
 
 // ─── Verify image URL ───────────────────────────────────────
 
@@ -245,7 +176,7 @@ async function main() {
       if (doLogo && !event.poster_url) {
         const logoQuery = `${nameClean}${cityPart} festival musica poster ${year}`;
         const logoResults = await searchDDGImages(logoQuery);
-        const logoUrl = findLogoImage(logoResults, nameClean, year);
+        const logoUrl = findBestImage(logoResults, 300, 200);
 
         if (logoUrl && await verifyImageUrl(logoUrl)) {
           update.poster_url = logoUrl;
@@ -263,7 +194,7 @@ async function main() {
       if (doLineup && !event.lineup_image_url) {
         const lineupQuery = `${nameClean}${cityPart} festival lineup cartel artistas ${year}`;
         const lineupResults = await searchDDGImages(lineupQuery);
-        const lineupUrl = findLineupImage(lineupResults, nameClean, year);
+        const lineupUrl = findBestImage(lineupResults, 400, 400);
 
         if (lineupUrl && await verifyImageUrl(lineupUrl)) {
           update.lineup_image_url = lineupUrl;
