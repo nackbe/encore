@@ -87,6 +87,7 @@ export default async function EventPage({
   const heroImage = isFestival
     ? (globalEvent?.poster_url ?? artists[0]?.artists?.image_url ?? null)
     : (artists[0]?.artists?.image_url ?? globalEvent?.poster_url ?? null);
+  const lineupImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
 
   // Mood emoji map
   const moodEmojis: Record<string, string> = {
@@ -118,6 +119,19 @@ export default async function EventPage({
             fill
             className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
             style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
+        </div>
+      )}
+
+      {/* Lineup poster (festivals only) */}
+      {lineupImage && (
+        <div className="mt-4 relative overflow-hidden rounded-xl aspect-[3/4] max-h-[600px]">
+          <Image
+            src={lineupImage}
+            alt={`${eventName} lineup`}
+            fill
+            className="object-contain bg-black/90"
             sizes="(max-width: 768px) 100vw, 768px"
           />
         </div>

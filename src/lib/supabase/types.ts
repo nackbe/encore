@@ -158,6 +158,7 @@ export interface Database {
           lat: number | null;
           lng: number | null;
           poster_url: string | null;
+          lineup_image_url: string | null;
           ticket_url: string | null;
           ticket_price_min: number | null;
           ticket_price_max: number | null;
@@ -185,6 +186,7 @@ export interface Database {
           lat?: number | null;
           lng?: number | null;
           poster_url?: string | null;
+          lineup_image_url?: string | null;
           ticket_url?: string | null;
           ticket_price_min?: number | null;
           ticket_price_max?: number | null;
@@ -212,6 +214,7 @@ export interface Database {
           lat?: number | null;
           lng?: number | null;
           poster_url?: string | null;
+          lineup_image_url?: string | null;
           ticket_url?: string | null;
           ticket_price_min?: number | null;
           ticket_price_max?: number | null;
