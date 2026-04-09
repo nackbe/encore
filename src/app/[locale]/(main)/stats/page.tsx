@@ -325,7 +325,7 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl overflow-x-hidden px-4 py-8">
       {/* Header */}
       <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
@@ -352,21 +352,21 @@ export default function StatsPage() {
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
 
         {/* Events by year */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <BarChart3 className="h-5 w-5 text-primary" />
             {t('eventsByYear')}
           </h2>
-          <div className="mt-5 flex items-end gap-2 px-2" style={{ height: 180 }}>
+          <div className="mt-5 flex items-end gap-1.5 overflow-x-auto px-1 sm:gap-2 sm:px-2" style={{ height: 180 }}>
             {stats.eventsByYear.map((item) => {
               const maxCount = Math.max(...stats.eventsByYear.map((e) => e.count), 1);
               const pct = (item.count / maxCount) * 100;
               const barHeight = Math.max(pct, 10);
               return (
-                <div key={item.year} className="flex flex-1 flex-col items-center">
+                <div key={item.year} className="flex min-w-[32px] flex-1 flex-col items-center">
                   <span className="mb-1.5 text-xs font-semibold text-foreground">{item.count}</span>
                   <div
-                    className="w-full max-w-[48px] rounded-t-md bg-primary/70 transition-all duration-500"
+                    className="w-full max-w-[36px] rounded-t-md bg-primary/70 sm:max-w-[48px] transition-all duration-500"
                     style={{ height: `${barHeight}px`, minHeight: 16, maxHeight: 140 }}
                   />
                   <span className="mt-1.5 text-[11px] font-medium text-muted-foreground">{item.year}</span>
@@ -377,7 +377,7 @@ export default function StatsPage() {
         </section>
 
         {/* Events by type */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Disc3 className="h-5 w-5 text-secondary" />
             {t('eventsByType')}
@@ -431,7 +431,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Artists */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Music className="h-5 w-5 text-primary" />
             {t('topArtists')}
@@ -445,7 +445,7 @@ export default function StatsPage() {
                   <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-primary/15 text-xs font-bold text-primary">
                     {i + 1}
                   </span>
-                  <span className="w-28 truncate text-sm font-medium">
+                  <span className="w-20 truncate text-sm font-medium sm:w-28">
                     {artist.name}
                   </span>
                   <div className="relative flex-1 h-5 rounded-md bg-muted overflow-hidden">
@@ -467,7 +467,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Genres — pills */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Star className="h-5 w-5 text-secondary" />
             {t('topGenres')}
@@ -509,7 +509,7 @@ export default function StatsPage() {
         </section>
 
         {/* Milestones */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Trophy className="h-5 w-5 text-primary" />
             {t('milestones')}
@@ -555,7 +555,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Cities */}
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <MapPin className="h-5 w-5 text-secondary" />
             {t('topCities')}
@@ -570,7 +570,7 @@ export default function StatsPage() {
                     <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-secondary/15 text-xs font-bold text-secondary">
                       {i + 1}
                     </span>
-                    <span className="w-28 truncate text-sm font-medium">
+                    <span className="w-20 truncate text-sm font-medium sm:w-28">
                       {item.city}
                     </span>
                     <div className="relative flex-1 h-5 rounded-md bg-muted overflow-hidden">
@@ -594,7 +594,7 @@ export default function StatsPage() {
         </section>
 
         {/* Concert map */}
-        <section className="rounded-xl border border-border bg-card p-6 lg:col-span-2">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6 lg:col-span-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Globe className="h-5 w-5 text-secondary" />
             {t('concertMap')}
