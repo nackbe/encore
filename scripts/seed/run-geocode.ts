@@ -153,6 +153,50 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'nürburg': { lat: 50.334, lng: 6.943 }, // Rock am Ring
   'finsbury park': { lat: 51.565, lng: -0.103 },
   'benicàssim': { lat: 40.046, lng: 0.062 }, 'benicassim': { lat: 40.046, lng: 0.062 },
+  'lytham st annes': { lat: 53.738, lng: -2.960 },
+  'newport': { lat: 41.490, lng: -71.313 }, // Newport, Rhode Island
+  'derbyshire': { lat: 53.100, lng: -1.559 },
+  'leicestershire': { lat: 52.634, lng: -1.131 },
+  'wickham': { lat: 50.935, lng: -1.128 },
+  'middlewich': { lat: 53.193, lng: -2.444 },
+  'malmesbury': { lat: 51.585, lng: -2.099 },
+  'stradbally': { lat: 53.013, lng: -7.345 }, // Electric Picnic
+  'dessel': { lat: 51.244, lng: 5.113 }, // Graspop
+  'hoogstraten': { lat: 51.400, lng: 4.766 },
+  'boom': { lat: 51.083, lng: 4.367 }, // Tomorrowland
+  'geel': { lat: 51.167, lng: 4.990 },
+  'leuven': { lat: 50.879, lng: 4.700 },
+  'hasselt': { lat: 50.931, lng: 5.338 },
+  'werchter': { lat: 50.960, lng: 4.699 },
+  'ypres': { lat: 50.851, lng: 2.882 },
+  'rennes': { lat: 48.117, lng: -1.678 },
+  'malakasa': { lat: 38.234, lng: 23.818 },
+  'eindhoven': { lat: 51.441, lng: 5.470 },
+  'tilburg': { lat: 51.556, lng: 5.091 },
+  'bern': { lat: 46.948, lng: 7.448 },
+  'düdingen': { lat: 46.842, lng: 7.190 },
+  'ostrava': { lat: 49.821, lng: 18.263 },
+  'vizovice': { lat: 49.222, lng: 17.852 },
+  'katowice': { lat: 50.265, lng: 19.024 },
+  'ostroda': { lat: 53.696, lng: 19.966 }, 'ostróda': { lat: 53.696, lng: 19.966 },
+  'krefeld': { lat: 51.339, lng: 6.586 },
+  'hildesheim': { lat: 52.151, lng: 9.951 },
+  'olofström': { lat: 56.277, lng: 14.533 }, 'olofstrom': { lat: 56.277, lng: 14.533 },
+  'johnstown': { lat: 40.327, lng: -78.922 },
+  'chillicothe': { lat: 39.333, lng: -82.983 },
+  'baltimore': { lat: 39.290, lng: -76.612 },
+  'barrie': { lat: 44.389, lng: -79.690 },
+  'niigata': { lat: 37.902, lng: 139.023 }, 'niigata prefecture': { lat: 37.902, lng: 139.023 },
+  'ishikari': { lat: 43.172, lng: 141.315 },
+  'shinagawa': { lat: 35.609, lng: 139.730 },
+  'incheon': { lat: 37.456, lng: 126.705 },
+  'lorne': { lat: -38.543, lng: 143.976 },
+  'yelgun': { lat: -28.505, lng: 153.530 },
+  'tyagarah': { lat: -28.609, lng: 153.558 },
+  'bell park': { lat: 46.452, lng: -81.000 }, // Sudbury area
+  'upcote farm': { lat: 51.871, lng: -1.907 },
+  'ohrid': { lat: 41.112, lng: 20.802 },
+  'rio de janeiro': { lat: -22.907, lng: -43.173 },
 
   // Asia & Oceania
   'tokyo': { lat: 35.682, lng: 139.692 },
@@ -166,8 +210,11 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'brisbane': { lat: -27.468, lng: 153.028 },
   'perth': { lat: -31.951, lng: 115.861 },
   'auckland': { lat: -36.849, lng: 174.763 },
-  'byron bay': { lat: -28.643, lng: 153.612 }, // Splendour/Bluesfest
-  'fuji': { lat: 35.210, lng: 138.616 }, // Fuji Rock
+  'byron bay': { lat: -28.643, lng: 153.612 },
+  'fuji': { lat: 35.210, lng: 138.616 },
+  'hyderabad': { lat: 17.385, lng: 78.487 },
+  'tbilisi': { lat: 41.693, lng: 44.802 },
+  'alice springs': { lat: -23.698, lng: 133.881 },
 
   // Africa
   'cape town': { lat: -33.925, lng: 18.424 },
@@ -177,15 +224,87 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'marrakech': { lat: 31.630, lng: -7.982 },
 };
 
-function lookupCity(city: string, country: string | null): { lat: number; lng: number } | null {
-  const norm = city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+// Countries → capital coords (for when country appears as city)
+const COUNTRY_CAPITALS: Record<string, { lat: number; lng: number }> = {
+  'japan': { lat: 35.682, lng: 139.692 },
+  'canada': { lat: 45.422, lng: -75.697 },
+  'australia': { lat: -33.869, lng: 151.209 }, // Sydney (cultural capital)
+  'serbia': { lat: 44.787, lng: 20.457 },
+  'portugal': { lat: 38.722, lng: -9.139 },
+  'czech republic': { lat: 50.076, lng: 14.438 },
+  'wales': { lat: 51.482, lng: -3.179 }, // Cardiff
+  'england': { lat: 51.507, lng: -0.128 }, // London
+  'scotland': { lat: 55.953, lng: -3.189 }, // Edinburgh
+  'romania': { lat: 44.427, lng: 26.103 },
+  'south korea': { lat: 37.566, lng: 126.978 },
+  'ireland': { lat: 53.350, lng: -6.260 },
+  'indonesia': { lat: -6.208, lng: 106.846 },
+  'thailand': { lat: 13.756, lng: 100.502 },
+  'norway': { lat: 59.914, lng: 10.752 },
+  'sweden': { lat: 59.329, lng: 18.069 },
+  'slovakia': { lat: 48.149, lng: 17.107 },
+  'brazil': { lat: -23.551, lng: -46.634 }, // São Paulo
+  'germany': { lat: 52.520, lng: 13.405 },
+  'france': { lat: 48.857, lng: 2.352 },
+  'italy': { lat: 41.902, lng: 12.496 },
+  'spain': { lat: 40.417, lng: -3.704 },
+  'mexico': { lat: 19.433, lng: -99.133 },
+  'united states': { lat: 39.833, lng: -98.583 },
+  'united kingdom': { lat: 51.507, lng: -0.128 },
+  'netherlands': { lat: 52.370, lng: 4.895 },
+  'belgium': { lat: 50.850, lng: 4.352 },
+  'austria': { lat: 48.208, lng: 16.374 },
+  'switzerland': { lat: 46.948, lng: 7.448 },
+  'poland': { lat: 52.230, lng: 21.012 },
+  'hungary': { lat: 47.497, lng: 19.040 },
+  'croatia': { lat: 45.815, lng: 15.982 },
+  'greece': { lat: 37.984, lng: 23.728 },
+  'turkey': { lat: 41.009, lng: 28.978 },
+  'denmark': { lat: 55.676, lng: 12.569 },
+  'finland': { lat: 60.170, lng: 24.938 },
+  'new zealand': { lat: -36.849, lng: 174.763 },
+  'south africa': { lat: -33.925, lng: 18.424 },
+  'colombia': { lat: 4.711, lng: -74.072 },
+  'argentina': { lat: -34.604, lng: -58.382 },
+  'chile': { lat: -33.449, lng: -70.669 },
+  'peru': { lat: -12.046, lng: -77.043 },
+  'china': { lat: 39.904, lng: 116.407 },
+  'india': { lat: 28.614, lng: 77.209 },
+  'costa rica': { lat: 9.929, lng: -84.088 },
+  'ecuador': { lat: -0.180, lng: -78.468 },
+  'venezuela': { lat: 10.481, lng: -66.904 },
+};
 
-  // Direct lookup
+// Clean garbage from Wikipedia-scraped city names
+function cleanCity(city: string): string {
+  return city
+    .replace(/\b(commencing in|todos os anos desde|todos los años desde|behind only|in parish of|every summer|for three days.*|at Flugplatz.*|or a venue in.*|in mid- to late.*)\b.*/i, '')
+    .replace(/\b(desde el año|Northeast that is usually)\b.*/i, '')
+    .replace(/\bin Faroe\b/i, '')
+    .trim();
+}
+
+function lookupCity(city: string, country: string | null): { lat: number; lng: number } | null {
+  const cleaned = cleanCity(city);
+  const norm = cleaned.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  if (!norm || norm.length < 2) return null;
+
+  // Direct lookup in city map
   if (CITY_COORDS[norm]) return CITY_COORDS[norm];
 
-  // Try without country qualifier
+  // Check if city is actually a country name → use capital
+  if (COUNTRY_CAPITALS[norm]) return COUNTRY_CAPITALS[norm];
+
+  // Partial match in city map
   for (const [key, coords] of Object.entries(CITY_COORDS)) {
     if (norm.includes(key) || key.includes(norm)) return coords;
+  }
+
+  // Check country field as fallback
+  if (country) {
+    const normCountry = country.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    if (COUNTRY_CAPITALS[normCountry]) return COUNTRY_CAPITALS[normCountry];
   }
 
   return null;
