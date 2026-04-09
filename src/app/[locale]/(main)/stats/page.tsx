@@ -165,15 +165,17 @@ export default function StatsPage() {
           });
         }
 
-        // First time in a new country
+        // First time in a new country — only track the first 3 countries
         if (country && !seenCountries.has(country)) {
           seenCountries.add(country);
-          milestones.push({
-            icon: Flag,
-            label: 'milestoneFirstCountry',
-            detail: country,
-            date: eventDate,
-          });
+          if (seenCountries.size <= 3) {
+            milestones.push({
+              icon: Flag,
+              label: 'milestoneFirstCountry',
+              detail: country,
+              date: eventDate,
+            });
+          }
         }
 
         // Event count thresholds
@@ -265,7 +267,8 @@ export default function StatsPage() {
         topArtists: sortedArtists.map(([, val]) => val),
         topGenres: sortedGenres.map(([genre, count]) => ({ genre, count })),
         topCities,
-        milestones,
+        // Prioritize milestones: firsts and thresholds are most interesting, limit to 8
+        milestones: milestones.slice(0, 8),
         mapEvents,
       };
     },
