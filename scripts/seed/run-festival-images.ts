@@ -125,14 +125,14 @@ async function main() {
   console.log(`Festival image scraper (type: ${type}, limit: ${limit}, dry: ${dryRun})\n`);
 
   // Fetch festivals — prioritize those missing images
-  const events: Array<{ id: string; name: string; date: string; city: string | null; poster_url: string | null; lineup_image_url: string | null }> = [];
+  const events: Array<{ id: string; name: string; date: string; city: string | null; country: string | null; poster_url: string | null; lineup_image_url: string | null }> = [];
   let page = 0;
   const pageSize = 1000;
 
   while (events.length < limit) {
     let query = supabase
       .from('global_events')
-      .select('id, name, date, city, poster_url, lineup_image_url')
+      .select('id, name, date, city, country, poster_url, lineup_image_url')
       .eq('event_type', 'festival')
       .order('date', { ascending: false })
       .range(page * pageSize, Math.min((page + 1) * pageSize - 1, limit - 1));
@@ -166,15 +166,18 @@ async function main() {
     if (!year) continue;
 
     const nameClean = event.name.replace(/past editions?/i, '').trim();
-    const cityPart = event.city ? ` ${event.city}` : '';
-    process.stdout.write(`  ${i + 1}/${events.length} | ${nameClean}${cityPart} (${year})...`);
+    // Location: prefer city, fallback to country
+    const location = event.city || event.country || '';
+    // Avoid duplicating "festival" if already in the name
+    const festivalWord = /festival/i.test(nameClean) ? '' : ' festival';
+    process.stdout.write(`  ${i + 1}/${events.length} | ${nameClean} ${location} (${year})...`);
 
     try {
       const update: Record<string, string | null> = {};
 
       // 1. Logo/poster image
       if (doLogo && !event.poster_url) {
-        const logoQuery = `${nameClean}${cityPart} festival musica poster ${year}`;
+        const logoQuery = `${nameClean}${festivalWord} musica ${location} ${year}`;
         const logoResults = await searchDDGImages(logoQuery);
         const logoUrl = findBestImage(logoResults, 300, 200);
 
@@ -192,7 +195,7 @@ async function main() {
 
       // 2. Lineup image
       if (doLineup && !event.lineup_image_url) {
-        const lineupQuery = `${nameClean}${cityPart} festival lineup cartel artistas ${year}`;
+        const lineupQuery = `${nameClean}${festivalWord} lineup cartel ${location} ${year}`;
         const lineupResults = await searchDDGImages(lineupQuery);
         const lineupUrl = findBestImage(lineupResults, 400, 400);
 
