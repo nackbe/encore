@@ -84,11 +84,12 @@ export default async function EventPage({
   const eventDate = event.custom_event_date ?? globalEvent?.date ?? '';
   const isFestival = event.event_type === 'festival';
   // Concerts: show main artist image. Festivals: show poster from Wikipedia.
+  // Hero: festivals show logo/poster, concerts show artist image
   const heroImage = isFestival
     ? (globalEvent?.poster_url ?? artists[0]?.artists?.image_url ?? null)
     : (artists[0]?.artists?.image_url ?? globalEvent?.poster_url ?? null);
-  // lineup_image_url from scraper is unreliable (wrong festivals matched), skip for now
-  const lineupImage: string | null = null;
+  // Lineup: only shown in detail view for festivals
+  const lineupImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
 
   // Mood emoji map
   const moodEmojis: Record<string, string> = {
