@@ -87,7 +87,8 @@ export default async function EventPage({
   const heroImage = isFestival
     ? (globalEvent?.poster_url ?? artists[0]?.artists?.image_url ?? null)
     : (artists[0]?.artists?.image_url ?? globalEvent?.poster_url ?? null);
-  const lineupImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
+  // lineup_image_url from scraper is unreliable (wrong festivals matched), skip for now
+  const lineupImage: string | null = null;
 
   // Mood emoji map
   const moodEmojis: Record<string, string> = {

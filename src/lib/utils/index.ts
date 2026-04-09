@@ -29,7 +29,10 @@ export function formatDate(
   locale: string,
   options?: Intl.DateTimeFormatOptions
 ): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  // Parse date-only strings (YYYY-MM-DD) as local time to avoid timezone shift
+  const dateObj = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(date + 'T12:00:00')
+    : typeof date === 'string' ? new Date(date) : date;
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -45,7 +48,9 @@ export function formatDate(
  * Formats an event date in short form: "15 ene 2025"
  */
 export function formatEventDate(date: string | Date, locale: string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(date + 'T12:00:00')
+    : typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -53,7 +58,9 @@ export function formatEventDate(date: string | Date, locale: string): string {
  * Formats a date as "month year" for timeline grouping: "Enero 2025"
  */
 export function formatMonthYear(date: string | Date, locale: string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(date + 'T12:00:00')
+    : typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString(locale, { year: 'numeric', month: 'long' });
 }
 
