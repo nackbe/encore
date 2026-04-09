@@ -63,7 +63,13 @@ function getEventCity(e: UserEventWithJoins): string {
 }
 
 function getEventImage(e: UserEventWithJoins): string | null {
-  return e.global_events?.poster_url ?? e.user_event_artists?.[0]?.artists?.image_url ?? null;
+  const isFestival = e.event_type === 'festival';
+  if (isFestival) {
+    // Festivals: poster from Wikipedia > headliner image
+    return e.global_events?.poster_url ?? e.user_event_artists?.[0]?.artists?.image_url ?? null;
+  }
+  // Concerts: artist image (Spotify/fanart) > poster_url as last resort
+  return e.user_event_artists?.[0]?.artists?.image_url ?? e.global_events?.poster_url ?? null;
 }
 
 export function CollectionGrid({ initialEvents }: CollectionGridProps) {

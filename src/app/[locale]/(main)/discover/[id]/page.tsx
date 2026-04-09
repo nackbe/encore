@@ -91,18 +91,26 @@ export default async function GlobalEventPage({
         {t('backToDiscover')}
       </Link>
 
-      {/* Poster */}
-      {event.poster_url && (
-        <div className="relative aspect-video overflow-hidden rounded-xl">
-          <Image
-            src={event.poster_url}
-            alt={event.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 768px"
-          />
-        </div>
-      )}
+      {/* Event image: festivals show poster, concerts show headliner */}
+      {(() => {
+        const isFest = event.event_type === 'festival';
+        const img = isFest
+          ? (event.poster_url ?? artists[0]?.artists?.image_url ?? null)
+          : (artists[0]?.artists?.image_url ?? event.poster_url ?? null);
+        if (!img) return null;
+        return (
+          <div className={`relative overflow-hidden rounded-xl ${isFest ? 'aspect-[3/4] max-h-[480px]' : 'aspect-video'}`}>
+            <Image
+              src={img}
+              alt={event.name}
+              fill
+              className={isFest ? 'object-contain bg-black/90' : 'object-cover'}
+              style={!isFest ? { objectPosition: '50% 15%' } : undefined}
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
+        );
+      })()}
 
       {/* Header */}
       <div className="mt-6">

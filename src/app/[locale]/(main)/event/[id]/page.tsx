@@ -82,7 +82,11 @@ export default async function EventPage({
   const venueName = venue?.name ?? '';
   const eventName = event.custom_event_name ?? globalEvent?.name ?? '';
   const eventDate = event.custom_event_date ?? globalEvent?.date ?? '';
-  const posterUrl = globalEvent?.poster_url ?? null;
+  const isFestival = event.event_type === 'festival';
+  // Concerts: show main artist image. Festivals: show poster from Wikipedia.
+  const heroImage = isFestival
+    ? (globalEvent?.poster_url ?? artists[0]?.artists?.image_url ?? null)
+    : (artists[0]?.artists?.image_url ?? globalEvent?.poster_url ?? null);
 
   // Mood emoji map
   const moodEmojis: Record<string, string> = {
@@ -106,13 +110,14 @@ export default async function EventPage({
       </Link>
 
       {/* Event image */}
-      {posterUrl && (
-        <div className="relative aspect-video overflow-hidden rounded-xl">
+      {heroImage && (
+        <div className={`relative overflow-hidden rounded-xl ${isFestival ? 'aspect-[3/4] max-h-[480px]' : 'aspect-video'}`}>
           <Image
-            src={posterUrl}
+            src={heroImage}
             alt={eventName}
             fill
-            className="object-cover"
+            className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
+            style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
             sizes="(max-width: 768px) 100vw, 768px"
           />
         </div>
