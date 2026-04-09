@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { DeleteEventButton } from '@/components/events/DeleteEventButton';
+import { ImageLightbox } from '@/components/ui/ImageLightbox';
 
 type UserEventWithJoins = UserEvent & {
   global_events: (GlobalEvent & { venues: Venue | null }) | null;
@@ -122,36 +123,42 @@ export default async function EventPage({
       {heroImage && (
         isFestival && lineupImage && lineupImage !== heroImage ? (
           <div className="grid grid-cols-2 gap-3">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+            <ImageLightbox src={heroImage} alt={eventName}>
+              <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+                <Image
+                  src={heroImage}
+                  alt={eventName}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 384px"
+                />
+              </div>
+            </ImageLightbox>
+            <ImageLightbox src={lineupImage} alt={`${eventName} lineup`}>
+              <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+                <Image
+                  src={lineupImage}
+                  alt={`${eventName} lineup`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 384px"
+                />
+              </div>
+            </ImageLightbox>
+          </div>
+        ) : (
+          <ImageLightbox src={heroImage} alt={eventName}>
+            <div className="relative overflow-hidden rounded-xl aspect-video">
               <Image
                 src={heroImage}
                 alt={eventName}
                 fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, 384px"
+                className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
+                style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
+                sizes="(max-width: 768px) 100vw, 768px"
               />
             </div>
-            <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
-              <Image
-                src={lineupImage}
-                alt={`${eventName} lineup`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 50vw, 384px"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="relative overflow-hidden rounded-xl aspect-video">
-            <Image
-              src={heroImage}
-              alt={eventName}
-              fill
-              className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
-              style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
-              sizes="(max-width: 768px) 100vw, 768px"
-            />
-          </div>
+          </ImageLightbox>
         )
       )}
 
