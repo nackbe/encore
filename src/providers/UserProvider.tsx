@@ -62,11 +62,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
 
+    let initialized = false;
+
     // 1. Set up auth state listener FIRST — catches events during init
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mountedRef.current) return;
+      console.log('[Auth]', event, newSession?.user?.email ?? 'no user');
 
       setSession(newSession);
       setUser(newSession?.user ?? null);
@@ -78,37 +81,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setError(null);
       }
 
-      // Always mark loading as done once we get any auth event
-      if (isLoading) {
-        setIsLoading(false);
-      }
+      initialized = true;
+      setIsLoading(false);
     });
 
-    // 2. Then get current session — triggers INITIAL_SESSION event above
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (!mountedRef.current) return;
-
-      // If onAuthStateChange hasn't fired yet, set state directly
-      if (isLoading) {
+    // 2. Fallback: if onAuthStateChange doesn't fire within 2s, try getSession directly
+    const fallbackTimer = setTimeout(async () => {
+      if (initialized || !mountedRef.current) return;
+      console.log('[Auth] Fallback: onAuthStateChange did not fire, calling getSession');
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('[Auth] getSession result:', currentSession?.user?.email ?? 'no session');
+        if (!mountedRef.current) return;
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         if (currentSession?.user) {
-          fetchProfile(currentSession.user.id).finally(() => {
-            if (mountedRef.current) setIsLoading(false);
-          });
-        } else {
-          setIsLoading(false);
+          await fetchProfile(currentSession.user.id);
         }
+      } catch (err) {
+        console.error('[Auth] getSession error:', err);
+      } finally {
+        if (mountedRef.current) setIsLoading(false);
       }
-    }).catch(() => {
-      if (mountedRef.current) {
-        setIsLoading(false);
-      }
-    });
+    }, 2000);
 
     // Safety: if nothing fires in 5s, stop loading
     const safetyTimer = setTimeout(() => {
-      if (mountedRef.current && isLoading) {
+      if (mountedRef.current) {
+        console.log('[Auth] Safety timeout — forcing isLoading=false');
         setIsLoading(false);
       }
     }, 5000);
@@ -116,6 +116,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mountedRef.current = false;
       subscription.unsubscribe();
+      clearTimeout(fallbackTimer);
       clearTimeout(safetyTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
