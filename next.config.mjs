@@ -38,7 +38,21 @@ const nextConfig = {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
           },
-          // CSP disabled temporarily — re-enable after Vercel deployment is stable
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https://i.scdn.co https://s1.ticketm.net https://images.universe.com https://via.placeholder.com https://placehold.co https://*.supabase.co https://assets.fanart.tv https://upload.wikimedia.org",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.spotify.com https://accounts.spotify.com https://musicbrainz.org https://api.setlist.fm https://app.ticketmaster.com",
+              "frame-src 'self' https://*.supabase.co",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+            ].join("; "),
+          },
         ],
       },
     ];
