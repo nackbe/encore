@@ -235,14 +235,15 @@ async function main() {
     if (!year) continue;
 
     const nameClean = event.name.replace(/past editions?/i, '').trim();
-    process.stdout.write(`  ${i + 1}/${events.length} | ${nameClean} (${year})...`);
+    const cityPart = event.city ? ` ${event.city}` : '';
+    process.stdout.write(`  ${i + 1}/${events.length} | ${nameClean}${cityPart} (${year})...`);
 
     try {
       const update: Record<string, string | null> = {};
 
       // 1. Logo/poster image
       if (doLogo && !event.poster_url) {
-        const logoQuery = `${nameClean} festival logo ${year}`;
+        const logoQuery = `${nameClean}${cityPart} festival musica poster ${year}`;
         const logoResults = await searchDDGImages(logoQuery);
         const logoUrl = findLogoImage(logoResults, nameClean, year);
 
@@ -260,7 +261,7 @@ async function main() {
 
       // 2. Lineup image
       if (doLineup && !event.lineup_image_url) {
-        const lineupQuery = `${nameClean} festival lineup ${year}`;
+        const lineupQuery = `${nameClean}${cityPart} festival lineup cartel artistas ${year}`;
         const lineupResults = await searchDDGImages(lineupQuery);
         const lineupUrl = findLineupImage(lineupResults, nameClean, year);
 
