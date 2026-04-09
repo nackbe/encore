@@ -65,29 +65,41 @@ export default function OnboardingPage() {
   }, [currentStep]);
 
   async function fetchSuggestedArtists() {
+    if (selectedGenres.length > 0) {
+      // Fetch artists matching selected genres, with images, ordered by popularity
+      const { data } = await supabase
+        .from('artists')
+        .select('id, name, genres, image_url')
+        .eq('is_active', true)
+        .not('image_url', 'is', null)
+        .overlaps('genres', selectedGenres)
+        .order('spotify_popularity', { ascending: false })
+        .limit(50) as { data: SuggestedArtist[] | null };
+
+      if (data && data.length > 0) {
+        // Score by how many selected genres match, then sort by score desc
+        const scored = data.map((a) => {
+          const matchCount = a.genres?.filter((g) =>
+            selectedGenres.some((sg) => g.toLowerCase().includes(sg.toLowerCase()))
+          ).length ?? 0;
+          return { ...a, score: matchCount };
+        }).sort((a, b) => b.score - a.score);
+        setSuggestedArtists(scored.slice(0, 20));
+        return;
+      }
+    }
+
+    // Fallback: top artists with images by popularity
     const { data } = await supabase
       .from('artists')
       .select('id, name, genres, image_url')
       .eq('is_active', true)
+      .not('image_url', 'is', null)
       .order('spotify_popularity', { ascending: false })
-      .limit(15) as { data: SuggestedArtist[] | null };
+      .limit(20) as { data: SuggestedArtist[] | null };
 
     if (data) {
-      // If user selected genres, prioritize matching artists
-      if (selectedGenres.length > 0) {
-        const sorted = data.sort((a, b) => {
-          const aMatch = a.genres?.filter((g) =>
-            selectedGenres.some((sg) => g.toLowerCase().includes(sg.toLowerCase()))
-          ).length ?? 0;
-          const bMatch = b.genres?.filter((g) =>
-            selectedGenres.some((sg) => g.toLowerCase().includes(sg.toLowerCase()))
-          ).length ?? 0;
-          return bMatch - aMatch;
-        });
-        setSuggestedArtists(sorted);
-      } else {
-        setSuggestedArtists(data);
-      }
+      setSuggestedArtists(data);
     }
   }
 

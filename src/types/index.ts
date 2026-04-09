@@ -2,7 +2,7 @@
 
 export type EventType = 'concert' | 'festival' | 'club_show' | 'theater' | 'special';
 
-export type MoodType = 'epic' | 'intimate' | 'euphoric' | 'nostalgic' | 'transcendent' | 'rainy';
+export type MoodType = 'epic' | 'intimate' | 'euphoric' | 'nostalgic' | 'transcendent' | 'rainy' | 'energetic' | 'melancholic' | 'peaceful' | 'chaotic' | 'emotional' | 'surreal';
 
 export type BadgeType =
   | 'last_concert'

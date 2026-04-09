@@ -24,7 +24,7 @@ const EVENT_TYPES: { value: EventType; labelKey: string }[] = [
   { value: 'special', labelKey: 'special' },
 ];
 
-const MOODS = ['epic', 'intimate', 'euphoric', 'nostalgic', 'transcendent', 'rainy'] as const;
+const MOODS = ['epic', 'intimate', 'euphoric', 'nostalgic', 'transcendent', 'rainy', 'energetic', 'melancholic', 'peaceful', 'chaotic', 'emotional', 'surreal'] as const;
 
 export default function EditEventPage() {
   const router = useRouter();

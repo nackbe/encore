@@ -61,13 +61,34 @@ export default async function CollectionPage() {
         </Link>
       </div>
 
-      {/* Insights: artist cloud, genres, badges */}
-      <CollectionInsights events={events} />
+      {events.length === 0 ? (
+        <div className="mt-16 flex flex-col items-center justify-center text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+            <PlusCircle className="h-10 w-10 text-primary" />
+          </div>
+          <h2 className="mt-6 text-xl font-semibold">{t('emptyCollection')}</h2>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            {t('emptyCollectionCta')}
+          </p>
+          <Link
+            href={`/${locale}/register`}
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary/90"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {t('registerCta')}
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Insights: artist cloud, genres, badges */}
+          <CollectionInsights events={events} />
 
-      {/* Events grid with filters */}
-      <div className="mt-6">
-        <CollectionGrid initialEvents={events} />
-      </div>
+          {/* Events grid with filters */}
+          <div className="mt-6">
+            <CollectionGrid initialEvents={events} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

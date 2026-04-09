@@ -97,6 +97,12 @@ export default async function EventPage({
     nostalgic: '\uD83D\uDC9C',
     transcendent: '\u2728',
     rainy: '\uD83C\uDF27\uFE0F',
+    energetic: '\uD83D\uDCAA',
+    melancholic: '\uD83C\uDF19',
+    peaceful: '\u2615',
+    chaotic: '\uD83C\uDF2A\uFE0F',
+    emotional: '\uD83D\uDE2D',
+    surreal: '\uD83C\uDF00',
   };
 
   return (

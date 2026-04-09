@@ -12,9 +12,31 @@ import '@/app/globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Encore - Tu historia musical en vivo',
+  title: {
+    default: 'Encore - Tu historia musical en vivo',
+    template: '%s | Encore',
+  },
   description:
     'Registra los conciertos y festivales que has vivido. Descubre eventos, colecciona recuerdos y comparte tu historia musical.',
+  keywords: ['conciertos', 'festivales', 'música en vivo', 'colección', 'estadísticas', 'live music', 'concerts', 'festivals'],
+  authors: [{ name: 'Encore' }],
+  openGraph: {
+    type: 'website',
+    siteName: 'Encore',
+    title: 'Encore - Tu historia musical en vivo',
+    description: 'Registra los conciertos y festivales que has vivido. Colecciona recuerdos y comparte tu historia musical.',
+    locale: 'es_LA',
+    alternateLocale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Encore - Tu historia musical en vivo',
+    description: 'Registra los conciertos y festivales que has vivido. Colecciona recuerdos y comparte tu historia musical.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },

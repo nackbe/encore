@@ -24,7 +24,7 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
     <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center px-4">
       {/* Hero + Features in one centered block */}
       <div className="flex w-full max-w-3xl flex-col items-center text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <div className="mt-8 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
           <Music className="h-8 w-8 text-primary" />
         </div>
         <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">

@@ -279,7 +279,13 @@
     "euphoric": "Eufórico",
     "nostalgic": "Nostálgico",
     "transcendent": "Trascendental",
-    "rainy": "Lluvioso"
+    "rainy": "Lluvioso",
+    "energetic": "Energético",
+    "melancholic": "Melancólico",
+    "peaceful": "Tranquilo",
+    "chaotic": "Caótico",
+    "emotional": "Emotivo",
+    "surreal": "Surrealista"
   },
   "onboarding": {
     "welcome": "¡Bienvenido a Encore!",

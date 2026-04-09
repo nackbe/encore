@@ -981,7 +981,7 @@ export function RegisterFlow() {
                   name="mood"
                   render={({ field }) => (
                     <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('mood')}>
-                      {(['epic', 'intimate', 'euphoric', 'nostalgic', 'transcendent', 'rainy'] as const).map((mood) => (
+                      {(['epic', 'intimate', 'euphoric', 'nostalgic', 'transcendent', 'rainy', 'energetic', 'melancholic', 'peaceful', 'chaotic', 'emotional', 'surreal'] as const).map((mood) => (
                         <button
                           key={mood}
                           type="button"
