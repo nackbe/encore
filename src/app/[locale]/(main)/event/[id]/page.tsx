@@ -118,32 +118,41 @@ export default async function EventPage({
         {t('backToCollection')}
       </Link>
 
-      {/* Hero image — logo/brand for festivals, artist photo for concerts */}
+      {/* Images — side by side for festivals with both, single for concerts */}
       {heroImage && (
-        <div className="relative overflow-hidden rounded-xl aspect-video">
-          <Image
-            src={heroImage}
-            alt={eventName}
-            fill
-            className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
-            style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
-            sizes="(max-width: 768px) 100vw, 768px"
-          />
-        </div>
-      )}
-
-      {/* Lineup poster (festivals only) — taller, scrollable */}
-      {lineupImage && lineupImage !== heroImage && (
-        <div className="mt-4 relative overflow-hidden rounded-xl">
-          <Image
-            src={lineupImage}
-            alt={`${eventName} lineup`}
-            width={800}
-            height={1200}
-            className="w-full h-auto rounded-xl"
-            sizes="(max-width: 768px) 100vw, 768px"
-          />
-        </div>
+        isFestival && lineupImage && lineupImage !== heroImage ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+              <Image
+                src={heroImage}
+                alt={eventName}
+                fill
+                className="object-contain bg-black/90"
+                sizes="(max-width: 768px) 50vw, 384px"
+              />
+            </div>
+            <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+              <Image
+                src={lineupImage}
+                alt={`${eventName} lineup`}
+                fill
+                className="object-contain bg-black/90"
+                sizes="(max-width: 768px) 50vw, 384px"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative overflow-hidden rounded-xl aspect-video">
+            <Image
+              src={heroImage}
+              alt={eventName}
+              fill
+              className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
+              style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
+        )
       )}
 
       {/* Header */}
