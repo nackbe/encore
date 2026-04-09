@@ -352,10 +352,10 @@ export default function StatsPage() {
       </div>
 
       {/* Charts */}
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+      <div className="mt-10 grid min-w-0 gap-4 sm:gap-6 lg:grid-cols-2">
 
         {/* Events by year */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <BarChart3 className="h-5 w-5 text-primary" />
             {t('eventsByYear')}
@@ -380,7 +380,7 @@ export default function StatsPage() {
         </section>
 
         {/* Events by type */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Disc3 className="h-5 w-5 text-secondary" />
             {t('eventsByType')}
@@ -434,7 +434,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Artists */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Music className="h-5 w-5 text-primary" />
             {t('topArtists')}
@@ -470,7 +470,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Genres — pills */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Star className="h-5 w-5 text-secondary" />
             {t('topGenres')}
@@ -512,7 +512,7 @@ export default function StatsPage() {
         </section>
 
         {/* Milestones */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Trophy className="h-5 w-5 text-primary" />
             {t('milestones')}
@@ -558,7 +558,7 @@ export default function StatsPage() {
         </section>
 
         {/* Top Cities */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <MapPin className="h-5 w-5 text-secondary" />
             {t('topCities')}
@@ -597,7 +597,7 @@ export default function StatsPage() {
         </section>
 
         {/* Concert map */}
-        <section className="rounded-xl border border-border bg-card p-4 sm:p-6 lg:col-span-2">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-6 lg:col-span-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Globe className="h-5 w-5 text-secondary" />
             {t('concertMap')}
