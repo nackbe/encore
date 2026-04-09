@@ -37,7 +37,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!mountedRef.current) return;
 
         if (profileError) {
-          // Profile might not exist yet (new user) — not a fatal error
           console.warn('[UserProvider] Profile fetch error:', profileError.message);
           setProfile(null);
         } else {
@@ -62,53 +61,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
 
-    let initialized = false;
-
-    // 1. Set up auth state listener FIRST — catches events during init
+    // onAuthStateChange fires INITIAL_SESSION immediately, then SIGNED_IN/TOKEN_REFRESHED as needed.
+    // This is the single source of truth for auth state.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mountedRef.current) return;
-      console.log('[Auth]', event, newSession?.user?.email ?? 'no user');
 
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
-      if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
-        await fetchProfile(newSession.user.id);
+      if (newSession?.user) {
+        // Don't await — let profile load in background so isLoading clears fast
+        fetchProfile(newSession.user.id);
       } else if (event === 'SIGNED_OUT') {
         setProfile(null);
         setError(null);
       }
 
-      initialized = true;
       setIsLoading(false);
     });
 
-    // 2. Fallback: if onAuthStateChange doesn't fire within 2s, try getSession directly
-    const fallbackTimer = setTimeout(async () => {
-      if (initialized || !mountedRef.current) return;
-      console.log('[Auth] Fallback: onAuthStateChange did not fire, calling getSession');
-      try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log('[Auth] getSession result:', currentSession?.user?.email ?? 'no session');
-        if (!mountedRef.current) return;
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        }
-      } catch (err) {
-        console.error('[Auth] getSession error:', err);
-      } finally {
-        if (mountedRef.current) setIsLoading(false);
-      }
-    }, 2000);
-
-    // Safety: if nothing fires in 5s, stop loading
+    // Safety: if onAuthStateChange never fires (shouldn't happen), stop loading after 5s
     const safetyTimer = setTimeout(() => {
       if (mountedRef.current) {
-        console.log('[Auth] Safety timeout — forcing isLoading=false');
         setIsLoading(false);
       }
     }, 5000);
@@ -116,7 +92,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mountedRef.current = false;
       subscription.unsubscribe();
-      clearTimeout(fallbackTimer);
       clearTimeout(safetyTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
