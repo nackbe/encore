@@ -59,7 +59,7 @@ export default function SignupPage({
     window.location.href = `/${locale}/onboarding`;
   }
 
-  async function handleOAuthLogin(provider: 'google' | 'spotify') {
+  async function handleOAuthLogin(provider: 'google') {
     setError(null);
 
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -99,15 +99,6 @@ export default function SignupPage({
         >
           <Mail className="mr-2 h-4 w-4" />
           {t('continueWithGoogle')}
-        </Button>
-        <Button
-          variant="secondary"
-          className="w-full"
-          onClick={() => handleOAuthLogin('spotify')}
-          type="button"
-        >
-          <Music className="mr-2 h-4 w-4" />
-          {t('continueWithSpotify')}
         </Button>
       </div>
 
