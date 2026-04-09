@@ -132,12 +132,61 @@ function mapLocalEvents(
   });
 }
 
+// Known locations for smart query parsing — detect "maluma colombia" → artist:"maluma", location:"colombia"
+const KNOWN_LOCATIONS = new Set([
+  // Countries
+  'colombia', 'mexico', 'argentina', 'chile', 'peru', 'brasil', 'brazil', 'ecuador',
+  'venezuela', 'uruguay', 'paraguay', 'panama', 'costa rica', 'cuba', 'guatemala',
+  'usa', 'united states', 'canada', 'uk', 'united kingdom', 'england', 'spain',
+  'france', 'germany', 'italy', 'portugal', 'netherlands', 'belgium', 'switzerland',
+  'austria', 'sweden', 'norway', 'denmark', 'finland', 'ireland', 'poland',
+  'czech republic', 'hungary', 'romania', 'croatia', 'serbia', 'greece', 'turkey',
+  'japan', 'south korea', 'china', 'india', 'australia', 'new zealand', 'thailand',
+  'indonesia', 'south africa',
+  // Major cities
+  'bogota', 'bogotá', 'medellin', 'medellín', 'cali', 'barranquilla', 'cartagena',
+  'buenos aires', 'santiago', 'lima', 'quito', 'montevideo', 'asuncion',
+  'mexico city', 'guadalajara', 'monterrey', 'sao paulo', 'rio de janeiro',
+  'new york', 'los angeles', 'chicago', 'miami', 'austin', 'nashville', 'seattle',
+  'london', 'paris', 'berlin', 'madrid', 'barcelona', 'amsterdam', 'brussels',
+  'lisbon', 'rome', 'milan', 'vienna', 'prague', 'budapest', 'warsaw', 'dublin',
+  'tokyo', 'seoul', 'osaka', 'bangkok', 'singapore', 'sydney', 'melbourne',
+  'toronto', 'montreal', 'vancouver', 'cape town',
+]);
+
+/** Split query into text part + optional location filter */
+function parseLocationFromQuery(query: string): { text: string; location: string | null } {
+  const words = query.toLowerCase().trim().split(/\s+/);
+
+  // Try 2-word locations first ("buenos aires", "new york", etc.)
+  for (let i = 0; i < words.length - 1; i++) {
+    const twoWord = `${words[i]} ${words[i + 1]}`;
+    if (KNOWN_LOCATIONS.has(twoWord)) {
+      const remaining = [...words.slice(0, i), ...words.slice(i + 2)].join(' ').trim();
+      return { text: remaining || query, location: twoWord };
+    }
+  }
+
+  // Try single-word locations
+  for (let i = 0; i < words.length; i++) {
+    if (KNOWN_LOCATIONS.has(words[i]) && words.length > 1) {
+      const remaining = [...words.slice(0, i), ...words.slice(i + 1)].join(' ').trim();
+      return { text: remaining || query, location: words[i] };
+    }
+  }
+
+  return { text: query, location: null };
+}
+
 export async function searchLocal(query: string, year?: string): Promise<UnifiedSearchResult[]> {
   const { createClient } = await import('@/lib/supabase/server');
   const supabase = await createClient();
 
   // Strip year from query so "radiohead 2018" matches "Radiohead en Foro Sol"
   const textQuery = year ? query.replace(year, '').replace(/\s{2,}/g, ' ').trim() : query;
+
+  // Detect location in query: "maluma colombia" → text:"maluma", location:"colombia"
+  const { text: searchText, location: locationFilter } = parseLocationFromQuery(textQuery);
 
   // Search 1: By event name or city
   const eventSelect = `
@@ -150,8 +199,7 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
     `;
 
   // Accent-insensitive search: replace vowels and ñ with _ (SQL single-char wildcard)
-  // so "estereo" becomes "_st_r__" which matches "Estéreo" via ilike
-  const accentWild = textQuery.replace(/[aeiouñ]/gi, '_');
+  const accentWild = searchText.replace(/[aeiouñ]/gi, '_');
   const orClauses = [
     `name.ilike.%${accentWild}%`,
     `city.ilike.%${accentWild}%`,
@@ -166,6 +214,12 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
     q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
   }
 
+  // Apply location filter if detected
+  if (locationFilter) {
+    const locWild = locationFilter.replace(/[aeiouñ]/gi, '_');
+    q = q.or(`city.ilike.%${locWild}%,country.ilike.%${locWild}%`);
+  }
+
   const { data: byName } = await q
     .order('date', { ascending: false })
     .limit(10) as unknown as { data: LocalEventRow[] | null };
@@ -173,10 +227,17 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
   // If no results with year filter, retry without it (dates may be placeholders)
   let byNameFallback: LocalEventRow[] = [];
   if ((!byName || byName.length === 0) && year) {
-    const { data: fallback } = await supabase
+    let fallbackQ = supabase
       .from('global_events')
       .select(eventSelect)
-      .or(orClauses)
+      .or(orClauses);
+
+    if (locationFilter) {
+      const locWild = locationFilter.replace(/[aeiouñ]/gi, '_');
+      fallbackQ = fallbackQ.or(`city.ilike.%${locWild}%,country.ilike.%${locWild}%`);
+    }
+
+    const { data: fallback } = await fallbackQ
       .order('date', { ascending: false })
       .limit(20) as unknown as { data: LocalEventRow[] | null };
 
@@ -187,7 +248,7 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
 
   // Search 2: By artist name → find festivals/events where that artist performed
   // Use name_normalized for faster search (no diacritics, lowercase)
-  const normalizedQuery = textQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const normalizedQuery = searchText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const { data: matchingArtists } = await supabase
     .from('artists')
     .select('id')
@@ -204,7 +265,7 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
       .from('global_event_artists')
       .select('global_event_id')
       .in('artist_id', artistIds)
-      .limit(50) as unknown as { data: Array<{ global_event_id: string }> | null };
+      .limit(100) as unknown as { data: Array<{ global_event_id: string }> | null };
 
     if (links && links.length > 0) {
       const eventIds = [...new Set(links.map(l => l.global_event_id))];
@@ -220,15 +281,21 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
             artists:artist_id (name, image_url)
           )
         `)
-        .in('id', eventIds.slice(0, 20));
+        .in('id', eventIds.slice(0, 30));
 
       if (year) {
         evtQ = evtQ.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
       }
 
+      // Filter by location if specified
+      if (locationFilter) {
+        const locWild = locationFilter.replace(/[aeiouñ]/gi, '_');
+        evtQ = evtQ.or(`city.ilike.%${locWild}%,country.ilike.%${locWild}%`);
+      }
+
       const { data: events } = await evtQ
         .order('date', { ascending: false })
-        .limit(10) as unknown as { data: LocalEventRow[] | null };
+        .limit(15) as unknown as { data: LocalEventRow[] | null };
 
       byArtistEvents = events ?? [];
     }

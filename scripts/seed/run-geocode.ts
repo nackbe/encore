@@ -82,7 +82,7 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'calgary': { lat: 51.045, lng: -114.072 },
   'edmonton': { lat: 53.546, lng: -113.494 },
   'indio': { lat: 33.721, lng: -116.215 }, // Coachella
-  'manchester': { lat: 42.991, lng: -71.463 },
+  'manchester nh': { lat: 42.991, lng: -71.463 },
   'dover': { lat: 39.158, lng: -75.524 }, // Firefly
   'george': { lat: 47.079, lng: -119.852 }, // The Gorge
   'pilton': { lat: 51.158, lng: -2.584 }, // Glastonbury
@@ -167,7 +167,6 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'geel': { lat: 51.167, lng: 4.990 },
   'leuven': { lat: 50.879, lng: 4.700 },
   'hasselt': { lat: 50.931, lng: 5.338 },
-  'werchter': { lat: 50.960, lng: 4.699 },
   'ypres': { lat: 50.851, lng: 2.882 },
   'rennes': { lat: 48.117, lng: -1.678 },
   'malakasa': { lat: 38.234, lng: 23.818 },
@@ -196,7 +195,6 @@ const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   'bell park': { lat: 46.452, lng: -81.000 }, // Sudbury area
   'upcote farm': { lat: 51.871, lng: -1.907 },
   'ohrid': { lat: 41.112, lng: 20.802 },
-  'rio de janeiro': { lat: -22.907, lng: -43.173 },
 
   // Asia & Oceania
   'tokyo': { lat: 35.682, lng: 139.692 },

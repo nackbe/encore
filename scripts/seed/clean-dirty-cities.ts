@@ -68,7 +68,7 @@ async function main() {
       .from('global_events')
       .update({ city: null })
       .eq('city', garbage)
-      .select('id', { count: 'exact' });
+      .select('id');
     const count = data?.length ?? 0;
     if (count > 0) {
       console.log(`  Nulled "${garbage}": ${count} rows`);
