@@ -139,18 +139,28 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
   // Strip year from query so "radiohead 2018" matches "Radiohead en Foro Sol"
   const textQuery = year ? query.replace(year, '').replace(/\s{2,}/g, ' ').trim() : query;
 
-  // Search 1: By event name or city (existing behavior)
-  let q = supabase
-    .from('global_events')
-    .select(`
+  // Search 1: By event name or city
+  const eventSelect = `
       id, name, date, date_end, city, country, lat, lng, event_type,
       poster_url, source, source_id,
       global_event_artists (
         artist_id,
         artists:artist_id (name, image_url)
       )
-    `)
-    .or(`name.ilike.%${textQuery}%,city.ilike.%${textQuery}%`);
+    `;
+
+  // Accent-insensitive search: replace vowels and ñ with _ (SQL single-char wildcard)
+  // so "estereo" becomes "_st_r__" which matches "Estéreo" via ilike
+  const accentWild = textQuery.replace(/[aeiouñ]/gi, '_');
+  const orClauses = [
+    `name.ilike.%${accentWild}%`,
+    `city.ilike.%${accentWild}%`,
+  ].join(',');
+
+  let q = supabase
+    .from('global_events')
+    .select(eventSelect)
+    .or(orClauses);
 
   if (year) {
     q = q.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
@@ -159,6 +169,21 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
   const { data: byName } = await q
     .order('date', { ascending: false })
     .limit(10) as unknown as { data: LocalEventRow[] | null };
+
+  // If no results with year filter, retry without it (dates may be placeholders)
+  let byNameFallback: LocalEventRow[] = [];
+  if ((!byName || byName.length === 0) && year) {
+    const { data: fallback } = await supabase
+      .from('global_events')
+      .select(eventSelect)
+      .or(orClauses)
+      .order('date', { ascending: false })
+      .limit(20) as unknown as { data: LocalEventRow[] | null };
+
+    byNameFallback = (fallback ?? []).filter(e =>
+      e.date?.startsWith(year!) || e.name.includes(year!)
+    );
+  }
 
   // Search 2: By artist name → find festivals/events where that artist performed
   // Use name_normalized for faster search (no diacritics, lowercase)
@@ -213,7 +238,7 @@ export async function searchLocal(query: string, year?: string): Promise<Unified
   const seenIds = new Set<string>();
   const allEvents: LocalEventRow[] = [];
 
-  for (const e of byName ?? []) {
+  for (const e of [...(byName ?? []), ...byNameFallback]) {
     if (!seenIds.has(e.id)) {
       seenIds.add(e.id);
       allEvents.push(e);
