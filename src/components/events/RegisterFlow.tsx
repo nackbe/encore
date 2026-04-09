@@ -494,13 +494,12 @@ export function RegisterFlow() {
     if (!user) return;
 
     try {
-      console.log('[submit] 1. Start — ensuring valid session');
-      // Ensure we have a fresh token before writing to DB
-      const { data: sessionData, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError || !sessionData.session) {
-        // Session truly expired — try getSession as fallback
-        const { data: fallback } = await supabase.auth.getSession();
-        if (!fallback.session) {
+      // Ensure we have a valid session before any DB writes
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Try refreshing
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        if (!refreshed.session) {
           toast({ title: tError('title'), description: 'Sesión expirada. Recarga la página.', variant: 'destructive' });
           return;
         }
@@ -612,9 +611,11 @@ export function RegisterFlow() {
       setPendingUnified(null);
       setSubmitSuccess(true);
 
-      // Revalidate caches in background (non-blocking)
-      revalidateCollection().catch(() => {});
+      // Invalidate all user data caches so Collection and Stats show new data
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['user-events'] });
+      queryClient.invalidateQueries({ queryKey: ['collection'] });
+      revalidateCollection().catch(() => {});
     } catch (err) {
       console.error('[submit] CATCH:', err instanceof Error ? err.message : err, err);
       toast({ title: tError('title'), description: tError('description'), variant: 'destructive' });

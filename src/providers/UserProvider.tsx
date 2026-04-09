@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
@@ -23,21 +23,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
   const fetchProfile = useCallback(
     async (userId: string) => {
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      try {
+        const { data, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (profileError) {
-        setError(profileError.message);
+        if (!mountedRef.current) return;
+
+        if (profileError) {
+          // Profile might not exist yet (new user) — not a fatal error
+          console.warn('[UserProvider] Profile fetch error:', profileError.message);
+          setProfile(null);
+        } else {
+          setProfile(data);
+          setError(null);
+        }
+      } catch (err) {
+        if (!mountedRef.current) return;
+        console.warn('[UserProvider] Profile fetch failed:', err);
         setProfile(null);
-      } else {
-        setProfile(data);
-        setError(null);
       }
     },
     [supabase]
@@ -50,56 +60,66 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
-    async function initialize() {
-      try {
-        const {
-          data: { session: currentSession },
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        }
-      } catch {
-        if (mounted) {
-          setError('Failed to initialize auth session');
-        }
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    initialize();
-
+    // 1. Set up auth state listener FIRST — catches events during init
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      if (!mounted) return;
+      if (!mountedRef.current) return;
 
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
-      if (event === 'SIGNED_IN' && newSession?.user) {
+      if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION')) {
         await fetchProfile(newSession.user.id);
       } else if (event === 'SIGNED_OUT') {
         setProfile(null);
         setError(null);
       }
+
+      // Always mark loading as done once we get any auth event
+      if (isLoading) {
+        setIsLoading(false);
+      }
     });
 
+    // 2. Then get current session — triggers INITIAL_SESSION event above
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      if (!mountedRef.current) return;
+
+      // If onAuthStateChange hasn't fired yet, set state directly
+      if (isLoading) {
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        if (currentSession?.user) {
+          fetchProfile(currentSession.user.id).finally(() => {
+            if (mountedRef.current) setIsLoading(false);
+          });
+        } else {
+          setIsLoading(false);
+        }
+      }
+    }).catch(() => {
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
+    });
+
+    // Safety: if nothing fires in 5s, stop loading
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current && isLoading) {
+        setIsLoading(false);
+      }
+    }, 5000);
+
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimer);
     };
-  }, [supabase, fetchProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   return (
     <UserContext.Provider

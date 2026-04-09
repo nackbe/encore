@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
+import { useUser } from '@/hooks/useUser';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -20,13 +21,10 @@ export function ArtistFollowButton({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const t = useTranslations('artist');
+  const supabase = useSupabase();
+  const { user } = useUser();
 
   const handleToggle = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
     if (!user) return;
 
     if (isFollowing) {

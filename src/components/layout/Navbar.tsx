@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSupabase } from '@/hooks/useSupabase';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,13 +55,18 @@ export function Navbar({ user }: NavbarProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
   async function handleLogout() {
+    // 1. Clear all cached data first
+    queryClient.clear();
+    // 2. Sign out from Supabase
     try {
       await supabase.auth.signOut();
     } catch {
-      // Force logout even if signOut fails
+      // Continue even if signOut fails
     }
+    // 3. Full page reload to clear all in-memory state
     window.location.href = `/${locale}`;
   }
 

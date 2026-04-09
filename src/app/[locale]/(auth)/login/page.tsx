@@ -44,8 +44,9 @@ export default function LoginPage() {
       return;
     }
 
-    router.push(`/${locale}/collection`);
-    router.refresh();
+    // Use window.location for full page load — ensures middleware sets fresh cookies
+    // and UserProvider initializes with the new session
+    window.location.href = `/${locale}/collection`;
   }
 
   async function handleOAuthLogin(provider: 'google' | 'spotify') {
@@ -54,7 +55,7 @@ export default function LoginPage() {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/collection`,
       },
     });
 

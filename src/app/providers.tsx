@@ -14,9 +14,11 @@ export function QueryProvider({ children }: QueryProviderProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            staleTime: 2 * 60 * 1000, // 2 min — data considered fresh
+            gcTime: 10 * 60 * 1000, // 10 min — keep in cache for fast back-nav
             retry: 1,
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true, // Refresh stale data when user returns to tab
+            refetchOnReconnect: true, // Refresh after network reconnect
           },
         },
       })

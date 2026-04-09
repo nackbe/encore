@@ -108,7 +108,7 @@ export default function OnboardingPage() {
   async function handleFinish() {
     if (!user) {
       // If no user yet (email confirmation pending), just redirect
-      router.push(`/${locale}/discover`);
+      router.push(`/${locale}/collection`);
       return;
     }
 
@@ -137,7 +137,7 @@ export default function OnboardingPage() {
 
     await refreshProfile();
     setIsFinishing(false);
-    router.push(`/${locale}/discover`);
+    router.push(`/${locale}/collection`);
   }
 
   async function handleSkipAll() {
@@ -147,7 +147,7 @@ export default function OnboardingPage() {
         .update({ onboarding_complete: true, updated_at: new Date().toISOString() })
         .eq('id', user.id);
     }
-    router.push(`/${locale}/discover`);
+    router.push(`/${locale}/collection`);
   }
 
   function nextStep() {

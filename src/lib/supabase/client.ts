@@ -3,8 +3,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 let client: SupabaseClient<Database> | null = null;
-let errorHandlerInstalled = false;
 
+/**
+ * Singleton browser Supabase client.
+ * Always returns the same instance to avoid multiple auth subscriptions
+ * and lock contention between tabs/components.
+ */
 export function createClient(): SupabaseClient<Database> {
   if (!client) {
     client = createBrowserClient<Database>(
@@ -12,21 +16,15 @@ export function createClient(): SupabaseClient<Database> {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         auth: {
-          // Increase lock timeout to reduce contention with concurrent requests
-          lockAcquireTimeout: 15000,
+          // Default lock timeout — 5s is enough for normal operations
+          lockAcquireTimeout: 5000,
+          // Detect session from URL (for OAuth callback)
+          detectSessionInUrl: true,
+          // Persist session in cookie for SSR sync
+          flowType: 'pkce',
         },
       }
     ) as unknown as SupabaseClient<Database>;
-
-    // Suppress Supabase auth lock errors (non-fatal, auth still works)
-    if (typeof window !== 'undefined' && !errorHandlerInstalled) {
-      errorHandlerInstalled = true;
-      window.addEventListener('unhandledrejection', (event) => {
-        if (event.reason?.message?.includes('was released because another request stole it')) {
-          event.preventDefault();
-        }
-      });
-    }
   }
   return client;
 }

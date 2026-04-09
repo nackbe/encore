@@ -46,7 +46,7 @@ export default function SignupPage({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/${locale}/collection`,
       },
     });
 
@@ -56,8 +56,7 @@ export default function SignupPage({
       return;
     }
 
-    router.push(`/${locale}/onboarding`);
-    router.refresh();
+    window.location.href = `/${locale}/onboarding`;
   }
 
   async function handleOAuthLogin(provider: 'google' | 'spotify') {
@@ -66,7 +65,7 @@ export default function SignupPage({
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/collection`,
       },
     });
 

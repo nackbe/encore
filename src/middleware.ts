@@ -32,15 +32,21 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session if expired (updates request cookies in-place)
+  // Refresh the session — use getUser() not getSession() for security.
+  // getUser() validates the JWT with Supabase server, getSession() only reads local cookie.
+  // This ensures expired/tampered tokens are caught.
   await supabase.auth.getUser();
 
-  // Run intl middleware once with refreshed cookies
+  // Run intl middleware with refreshed cookies
   const response = intlMiddleware(request);
 
-  // Apply Supabase cookie changes to the intl response
+  // Apply Supabase cookie changes to the response so the browser gets fresh tokens
   for (const cookie of supabaseCookies) {
-    response.cookies.set({ name: cookie.name, value: cookie.value, ...cookie.options });
+    response.cookies.set({
+      name: cookie.name,
+      value: cookie.value,
+      ...cookie.options,
+    });
   }
 
   return response;
