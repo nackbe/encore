@@ -191,7 +191,7 @@ async function main() {
       country: yearLoc?.country ?? festLoc?.country ?? null,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
-      poster_url: lineup.posterUrl ?? null,
+      poster_url: null, // Never propagate — run-festival-images.ts fetches per-year logos via DuckDuckGo
       source: 'wikipedia' as const,
       source_id: sourceId,
       source_url: `https://${lineup.lang}.wikipedia.org/wiki/${encodeURIComponent(lineup.sourcePage.replace(/ /g, '_'))}`,

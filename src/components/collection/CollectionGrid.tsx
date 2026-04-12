@@ -63,13 +63,18 @@ function getEventCity(e: UserEventWithJoins): string {
 }
 
 function getEventImage(e: UserEventWithJoins): string | null {
-  const isFestival = e.event_type === 'festival';
-  if (isFestival) {
-    // Festivals: poster from Wikipedia > headliner image
-    return e.global_events?.poster_url ?? e.user_event_artists?.[0]?.artists?.image_url ?? null;
+  // First artist alphabetically that has an image
+  const firstArtistImage = [...(e.user_event_artists ?? [])]
+    .sort((a, b) => a.artists.name.localeCompare(b.artists.name))
+    .find(a => a.artists.image_url)
+    ?.artists.image_url ?? null;
+
+  if (e.event_type === 'festival') {
+    // Festivals: DuckDuckGo poster > first artist alphabetically
+    return e.global_events?.poster_url ?? firstArtistImage;
   }
-  // Concerts: artist image (Spotify/fanart) > poster_url as last resort
-  return e.user_event_artists?.[0]?.artists?.image_url ?? e.global_events?.poster_url ?? null;
+  // Concerts: first artist alphabetically > poster_url as last resort
+  return firstArtistImage ?? e.global_events?.poster_url ?? null;
 }
 
 export function CollectionGrid({ initialEvents }: CollectionGridProps) {

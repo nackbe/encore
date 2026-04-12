@@ -266,7 +266,7 @@ async function loadEvents(
         date_end: eventDateEnd,
         city: yearLoc?.city ?? festLoc?.city ?? null,
         country: yearLoc?.country ?? festLoc?.country ?? null,
-        poster_url: f.posterUrl ?? null,
+        poster_url: null, // Never propagate — run-festival-images.ts fetches per-year logos via DuckDuckGo
         source: 'wikipedia' as const,
         source_id: e.sourceId,
         source_url: wikiUrl,

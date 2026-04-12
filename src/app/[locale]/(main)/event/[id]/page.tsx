@@ -84,11 +84,13 @@ export default async function EventPage({
   const eventName = event.custom_event_name ?? globalEvent?.name ?? '';
   const eventDate = event.custom_event_date ?? globalEvent?.date ?? '';
   const isFestival = event.event_type === 'festival';
-  // Concerts: show main artist image. Festivals: show poster from Wikipedia.
-  // Hero: festivals show logo/poster, concerts show artist image
+  // First artist alphabetically that has an image
+  const firstArtistImage = artists.find(a => a.artists.image_url)?.artists.image_url ?? null;
+  // Festivals: DuckDuckGo poster → first artist alphabetically
+  // Concerts: first artist alphabetically → poster as last resort
   const heroImage = isFestival
-    ? (globalEvent?.poster_url ?? artists[0]?.artists?.image_url ?? null)
-    : (artists[0]?.artists?.image_url ?? globalEvent?.poster_url ?? null);
+    ? (globalEvent?.poster_url ?? firstArtistImage)
+    : (firstArtistImage ?? globalEvent?.poster_url ?? null);
   // Lineup: only shown in detail view for festivals
   const lineupImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
 
