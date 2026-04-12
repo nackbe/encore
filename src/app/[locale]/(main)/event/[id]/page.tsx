@@ -84,15 +84,15 @@ export default async function EventPage({
   const eventName = event.custom_event_name ?? globalEvent?.name ?? '';
   const eventDate = event.custom_event_date ?? globalEvent?.date ?? '';
   const isFestival = event.event_type === 'festival';
-  // First artist alphabetically that has an image
+  const cartelImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
+  const logoImage = globalEvent?.poster_url ?? null;
+  // Detail hero: for festivals, cartel is primary. Only show images if at least cartel exists.
+  // Concerts: first artist alphabetically → poster as last resort. No artist images in festival detail.
   const firstArtistImage = artists.find(a => a.artists.image_url)?.artists.image_url ?? null;
-  // Festivals: DuckDuckGo poster → first artist alphabetically
-  // Concerts: first artist alphabetically → poster as last resort
   const heroImage = isFestival
-    ? (globalEvent?.poster_url ?? firstArtistImage)
-    : (firstArtistImage ?? globalEvent?.poster_url ?? null);
-  // Lineup: only shown in detail view for festivals
-  const lineupImage = isFestival ? (globalEvent as Record<string, unknown>)?.lineup_image_url as string | null : null;
+    ? (cartelImage ? logoImage : null)  // logo only shown when cartel exists; if no cartel → no hero
+    : (firstArtistImage ?? logoImage ?? null);
+  const lineupImage = cartelImage; // cartel is always the "second" image slot (shown first visually)
 
   // Mood emoji map
   const moodEmojis: Record<string, string> = {
@@ -121,42 +121,61 @@ export default async function EventPage({
         {t('backToCollection')}
       </Link>
 
-      {/* Images — side by side for festivals with both, single for concerts */}
-      {heroImage && (
-        isFestival && lineupImage && lineupImage !== heroImage ? (
-          <div className="grid grid-cols-2 gap-3">
-            <ImageLightbox src={heroImage} alt={eventName}>
-              <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
-                <Image
-                  src={heroImage}
-                  alt={eventName}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 50vw, 384px"
-                />
-              </div>
-            </ImageLightbox>
-            <ImageLightbox src={lineupImage} alt={`${eventName} lineup`}>
-              <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+      {/* Images — festivals: cartel (left/primary) + logo (right), only if cartel exists
+                  concerts: single hero image */}
+      {isFestival ? (
+        lineupImage && (
+          heroImage ? (
+            // Both cartel and logo: side by side, cartel first
+            <div className="grid grid-cols-2 gap-3">
+              <ImageLightbox src={lineupImage} alt={`${eventName} cartel`}>
+                <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+                  <Image
+                    src={lineupImage}
+                    alt={`${eventName} cartel`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 384px"
+                  />
+                </div>
+              </ImageLightbox>
+              <ImageLightbox src={heroImage} alt={eventName}>
+                <div className="relative aspect-[3/4] overflow-hidden rounded-xl">
+                  <Image
+                    src={heroImage}
+                    alt={eventName}
+                    fill
+                    className="object-contain bg-black/90"
+                    sizes="(max-width: 768px) 50vw, 384px"
+                  />
+                </div>
+              </ImageLightbox>
+            </div>
+          ) : (
+            // Only cartel, no logo: full width
+            <ImageLightbox src={lineupImage} alt={`${eventName} cartel`}>
+              <div className="relative overflow-hidden rounded-xl aspect-video">
                 <Image
                   src={lineupImage}
-                  alt={`${eventName} lineup`}
+                  alt={`${eventName} cartel`}
                   fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 50vw, 384px"
+                  className="object-contain bg-black/90"
+                  sizes="(max-width: 768px) 100vw, 768px"
                 />
               </div>
             </ImageLightbox>
-          </div>
-        ) : (
+          )
+        )
+      ) : (
+        heroImage && (
           <ImageLightbox src={heroImage} alt={eventName}>
             <div className="relative overflow-hidden rounded-xl aspect-video">
               <Image
                 src={heroImage}
                 alt={eventName}
                 fill
-                className={isFestival ? 'object-contain bg-black/90' : 'object-cover'}
-                style={!isFestival ? { objectPosition: '50% 15%' } : undefined}
+                className="object-cover"
+                style={{ objectPosition: '50% 15%' }}
                 sizes="(max-width: 768px) 100vw, 768px"
               />
             </div>
