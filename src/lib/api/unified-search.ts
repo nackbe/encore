@@ -624,51 +624,55 @@ export async function unifiedEventSearch(query: string): Promise<UnifiedSearchRe
           }
         }
       } else {
-        // Smart location detection: "bad bunny medellin" → artist="bad bunny", city="medellin"
-        const { text: sfmText, location: sfmLocation } = parseLocationFromQuery(parsed.text);
-        const searchArtistText = sfmLocation ? sfmText : parsed.text;
+        // Strategy: for any query, try full text as artist AND (if multi-word) try
+        // splitting last word(s) as city. Works for ANY city worldwide — no hardcoded list.
+        const words = parsed.text.split(/\s+/);
 
-        // If location detected, search artist + city directly first
-        if (sfmLocation) {
-          console.log(`[search] SFM location detected: artist="${sfmText}", city="${sfmLocation}"`);
-          const artists = await searchSFMArtists(sfmText);
-          if (artists.length > 0) {
-            const r = await searchSetlists({ artistMbid: artists[0].mbid, cityName: sfmLocation });
-            allSetlists.push(...r.setlist);
-            // Also search without city for more results
-            if (allSetlists.length < 3) {
-              const r2 = await searchSetlists({ artistMbid: artists[0].mbid });
-              allSetlists.push(...r2.setlist);
-            }
-          } else {
-            const r = await searchSetlists({ artistName: sfmText, cityName: sfmLocation });
-            allSetlists.push(...r.setlist);
-          }
+        // High-confidence artist match: returned name must closely match the query.
+        // Prevents "Taylor" from confidently matching "Taylor Swift" as an artist split.
+        function isGoodArtistMatch(query: string, found: string): boolean {
+          const q = normalize(query);
+          const f = normalize(found);
+          if (q === f) return true;
+          const stripThe = (s: string) => s.replace(/^the\s+/, '').trim();
+          if (stripThe(q) === stripThe(f)) return true;
+          // Allow minor suffix differences: "radiohead (band)" matching "radiohead"
+          if (f.startsWith(q) && f.slice(q.length).trim().length <= 8) return true;
+          if (q.startsWith(f) && q.slice(f.length).trim().length <= 8) return true;
+          return false;
         }
 
-        // Standard artist search (no location or as fallback)
-        if (allSetlists.length === 0) {
-          const artists = await searchSFMArtists(searchArtistText);
-          console.log(`[search] SFM artist lookup "${searchArtistText}" → ${artists.length} artists${artists.length > 0 ? ` (best: "${artists[0].name}", mbid: ${artists[0].mbid})` : ''}`);
-          if (artists.length > 0) {
-            const r = await searchSetlists({ artistMbid: artists[0].mbid });
-            allSetlists.push(...r.setlist);
-          }
-          if (allSetlists.length === 0) {
-            const r = await searchSetlists({ artistName: searchArtistText });
-            allSetlists.push(...r.setlist);
-          }
+        // Run both artist lookups in parallel
+        const [artistsA, artistsB1, artistsB2] = await Promise.all([
+          searchSFMArtists(parsed.text),
+          words.length >= 2 ? searchSFMArtists(words.slice(0, -1).join(' ')) : Promise.resolve([]),
+          words.length >= 3 ? searchSFMArtists(words.slice(0, -2).join(' ')) : Promise.resolve([]),
+        ]);
+
+        // Determine best city-split candidate (last 1 or 2 words as city)
+        const splitCandidates: Array<{ artist: typeof artistsB1[0]; city: string }> = [];
+        if (words.length >= 2 && artistsB1.length > 0 && isGoodArtistMatch(words.slice(0, -1).join(' '), artistsB1[0].name)) {
+          splitCandidates.push({ artist: artistsB1[0], city: words[words.length - 1] });
+        }
+        if (words.length >= 3 && artistsB2.length > 0 && isGoodArtistMatch(words.slice(0, -2).join(' '), artistsB2[0].name)) {
+          splitCandidates.push({ artist: artistsB2[0], city: words.slice(-2).join(' ') });
         }
 
-        // Last resort: split last word as city
-        if (allSetlists.length === 0 && !sfmLocation) {
-          const words = parsed.text.split(/\s+/);
-          if (words.length >= 2) {
-            const maybeCity = words[words.length - 1];
-            const maybeArtist = words.slice(0, -1).join(' ');
-            const r2 = await searchSetlists({ artistName: maybeArtist, cityName: maybeCity });
-            allSetlists.push(...r2.setlist);
-          }
+        // Fetch setlists in parallel: full artist + all city-split candidates
+        const [resultA, ...splitResults] = await Promise.all([
+          artistsA.length > 0 && isGoodArtistMatch(parsed.text, artistsA[0].name)
+            ? searchSetlists({ artistMbid: artistsA[0].mbid })
+            : searchSetlists({ artistName: parsed.text }),
+          ...splitCandidates.map(c => searchSetlists({ artistMbid: c.artist.mbid, cityName: c.city })),
+        ]);
+
+        // Prefer city-filtered results if they exist (more specific than global artist results)
+        const cityResults = splitResults.flatMap(r => r.setlist);
+        if (cityResults.length > 0) {
+          allSetlists.push(...cityResults);
+          if (allSetlists.length < 5) allSetlists.push(...resultA.setlist);
+        } else {
+          allSetlists.push(...resultA.setlist);
         }
       }
 
