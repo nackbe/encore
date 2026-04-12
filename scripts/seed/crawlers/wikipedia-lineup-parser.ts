@@ -1148,14 +1148,20 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
 
     // ── <p> with comma-separated artists (linked + unlinked) ──
     // Extract from paragraphs that look like artist lists.
-    // Heuristic: 3+ wiki links with reasonable density (>25% of text is links)
+    // Heuristic: 3+ wiki links with reasonable density (>20% of text is links)
     if (tag === 'p') {
+      const paraText = $el.text();
+      // Skip paragraphs about visual arts, exhibitions, or non-music contexts
+      // e.g. "exposiciones de artistas de la talla de Miquel Barceló..."
+      const NON_MUSIC_PARA = /\b(exposici[oó]n|exhibici[oó]n|instalaci[oó]n|arte\s+por|artistas?\s+(visuales?|pl[aá]stic|gr[aá]fic)|muestra|galería|pintor|escultor|cine|teatro|danza|ballet)\b/i;
+      if (NON_MUSIC_PARA.test(paraText)) return;
+
       const links = $el.find('a').not('sup.reference a, .reflist a, .external');
       if (links.length >= 3) {
-        const totalText = $el.text().length;
+        const totalText = paraText.length;
         const linkText = links.toArray().reduce((sum, a) => sum + $(a).text().length, 0);
         const linkDensity = linkText / Math.max(totalText, 1);
-        if (linkDensity > 0.25) {
+        if (linkDensity > 0.20) {
           // 1. Linked artists (full name preserved, e.g. "Tyler, The Creator")
           const linked = extractArtistsFromLinks($, $el);
           const linkedNames = new Set(linked.map((a) => a.name.toLowerCase()));

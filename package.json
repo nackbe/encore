@@ -11,7 +11,8 @@
     "db:types": "supabase gen types typescript --local > src/lib/supabase/types.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:events": "tsx scripts/seed-events.ts"
+    "seed:events": "tsx scripts/seed-events.ts",
+    "seed:festival": "tsx scripts/seed-festival.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

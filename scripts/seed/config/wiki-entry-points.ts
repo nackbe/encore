@@ -70,7 +70,7 @@ export const WIKI_ENTRY_POINTS: WikiEntryPoint[] = [
   // ─── Spanish Wikipedia (Latin America coverage) ─────────────
 
   { category: 'Festivales_de_música', lang: 'es', maxDepth: 4, label: 'ES: Festivales de música' },
-  { category: 'Festivales_de_rock', lang: 'es', maxDepth: 3, label: 'ES: Festivales de rock' },
+  { category: 'Festivales_de_rock', lang: 'es', maxDepth: 4, label: 'ES: Festivales de rock' },
   { category: 'Festivales_de_música_electrónica', lang: 'es', maxDepth: 3, label: 'ES: Festivales electrónica' },
   { category: 'Festivales_de_música_de_Colombia', lang: 'es', maxDepth: 3, label: 'ES: Colombia' },
   { category: 'Festivales_de_música_de_México', lang: 'es', maxDepth: 3, label: 'ES: México' },
@@ -78,6 +78,13 @@ export const WIKI_ENTRY_POINTS: WikiEntryPoint[] = [
   { category: 'Festivales_de_música_de_Chile', lang: 'es', maxDepth: 3, label: 'ES: Chile' },
   { category: 'Festivales_de_música_de_España', lang: 'es', maxDepth: 3, label: 'ES: España' },
   { category: 'Festivales_de_música_de_Perú', lang: 'es', maxDepth: 3, label: 'ES: Perú' },
+  // Direct subcategory entry points to avoid depth-limit misses
+  { category: 'Festivales_de_rock_de_España', lang: 'es', maxDepth: 1, label: 'ES: Rock España (directo)' },
+  { category: 'Festivales_de_rock_de_Colombia', lang: 'es', maxDepth: 1, label: 'ES: Rock Colombia (directo)' },
+  { category: 'Festivales_de_rock_de_México', lang: 'es', maxDepth: 1, label: 'ES: Rock México (directo)' },
+  { category: 'Festivales_de_rock_de_Argentina', lang: 'es', maxDepth: 1, label: 'ES: Rock Argentina (directo)' },
+  { category: 'Festivales_de_rock_de_Chile', lang: 'es', maxDepth: 1, label: 'ES: Rock Chile (directo)' },
+  { category: 'Festivales_de_rock_de_Perú', lang: 'es', maxDepth: 1, label: 'ES: Rock Perú (directo)' },
 
   // ─── Portuguese Wikipedia (Brazil coverage) ─────────────────
 
