@@ -455,13 +455,25 @@ function deduplicateResults(results: UnifiedSearchResult[]): UnifiedSearchResult
 
 // ─── Query Parser ──────────────────────────────────────────────
 
+// These are matched as whole words (\b boundaries) to avoid false positives like
+// "Belfast" matching "fest", or "Ultra Nate" matching "ultra".
 const FESTIVAL_KEYWORDS = [
-  'festival', 'fest', 'lollapalooza', 'coachella', 'primavera', 'bonnaroo',
-  'glastonbury', 'tomorrowland', 'sonar', 'mad cool', 'rock al parque',
+  'festival', 'fest', 'lollapalooza', 'coachella', 'primavera sound', 'bonnaroo',
+  'glastonbury', 'tomorrowland', 'sónar', 'sonar festival', 'mad cool', 'rock al parque',
   'estéreo picnic', 'estereo picnic', 'vive latino', 'corona capital',
-  'rock in rio', 'summerfest', 'ultra',
-  'creamfields', 'electric daisy', 'edc', 'austin city limits', 'acl',
+  'rock in rio', 'summerfest', 'ultra music', 'ultra festival',
+  'creamfields', 'electric daisy', 'austin city limits',
 ];
+
+function isFestivalQuery(text: string): boolean {
+  const lower = text.toLowerCase();
+  return FESTIVAL_KEYWORDS.some((kw) => {
+    // Multi-word keywords: use includes (already specific enough)
+    if (kw.includes(' ')) return lower.includes(kw);
+    // Single-word keywords: require word boundary to avoid "Belfast" matching "fest"
+    return new RegExp(`\\b${kw}\\b`).test(lower);
+  });
+}
 
 interface ParsedQuery {
   artist?: string;    // artist name (if detected)
@@ -483,7 +495,7 @@ function parseQuery(raw: string): ParsedQuery {
 
   // Check if it's a festival search
   const lowerText = withoutYear.toLowerCase();
-  const isFestival = FESTIVAL_KEYWORDS.some((kw) => lowerText.includes(kw));
+  const isFestival = isFestivalQuery(lowerText);
 
   // Try to split "Artist at Venue" or "Artist en Venue"
   const atMatch = withoutYear.match(/^(.+?)\s+(?:at|en|@)\s+(.+)$/i);
@@ -493,7 +505,7 @@ function parseQuery(raw: string): ParsedQuery {
       venue: atMatch[2].trim(),
       text: withoutYear,
       year,
-      isFestival: isFestival || FESTIVAL_KEYWORDS.some((kw) => atMatch[2].toLowerCase().includes(kw)),
+      isFestival: isFestival || isFestivalQuery(atMatch[2].toLowerCase()),
     };
   }
 
