@@ -18,6 +18,35 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 config({ path: resolve(__dirname, '..', '.env.local') });
 
+// City → coordinates lookup (subset of run-geocode CITY_COORDS)
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  'madrid': { lat: 40.417, lng: -3.704 }, 'barcelona': { lat: 41.386, lng: 2.170 },
+  'london': { lat: 51.507, lng: -0.128 }, 'paris': { lat: 48.857, lng: 2.352 },
+  'berlin': { lat: 52.520, lng: 13.405 }, 'amsterdam': { lat: 52.370, lng: 4.895 },
+  'lisbon': { lat: 38.722, lng: -9.139 }, 'rome': { lat: 41.902, lng: 12.496 },
+  'milan': { lat: 45.464, lng: 9.190 }, 'vienna': { lat: 48.208, lng: 16.374 },
+  'brussels': { lat: 50.850, lng: 4.352 }, 'dublin': { lat: 53.350, lng: -6.260 },
+  'stockholm': { lat: 59.329, lng: 18.069 }, 'oslo': { lat: 59.914, lng: 10.752 },
+  'copenhagen': { lat: 55.676, lng: 12.569 }, 'helsinki': { lat: 60.170, lng: 24.938 },
+  'bogotá': { lat: 4.711, lng: -74.072 }, 'bogota': { lat: 4.711, lng: -74.072 },
+  'medellín': { lat: 6.217, lng: -75.568 }, 'medellin': { lat: 6.217, lng: -75.568 },
+  'buenos aires': { lat: -34.604, lng: -58.382 },
+  'santiago': { lat: -33.449, lng: -70.669 },
+  'são paulo': { lat: -23.551, lng: -46.634 }, 'sao paulo': { lat: -23.551, lng: -46.634 },
+  'rio de janeiro': { lat: -22.907, lng: -43.173 },
+  'mexico city': { lat: 19.433, lng: -99.133 },
+  'lima': { lat: -12.046, lng: -77.043 },
+  'new york': { lat: 40.713, lng: -74.006 }, 'los angeles': { lat: 34.052, lng: -118.244 },
+  'chicago': { lat: 41.878, lng: -87.630 }, 'austin': { lat: 30.267, lng: -97.743 },
+  'tokyo': { lat: 35.689, lng: 139.692 }, 'seoul': { lat: 37.566, lng: 126.978 },
+  'sydney': { lat: -33.868, lng: 151.209 }, 'melbourne': { lat: -37.814, lng: 144.963 },
+};
+
+function geocodeCity(city: string | null | undefined): { lat: number; lng: number } | null {
+  if (!city) return null;
+  return CITY_COORDS[city.toLowerCase()] ?? null;
+}
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../src/lib/supabase/types';
 import { parseFestivalLineup } from './seed/crawlers/wikipedia-lineup-parser';
@@ -149,6 +178,8 @@ async function main() {
     const eventName = y.edition ? `${lineup.title} ${y.edition}` : lineup.title;
     const festLoc = lineup.location;
     const yearLoc = y.location;
+    const city = yearLoc?.city ?? festLoc?.city ?? null;
+    const coords = geocodeCity(city);
 
     // Build event payload
     const eventPayload = {
@@ -156,8 +187,10 @@ async function main() {
       event_type: 'festival' as const,
       date: y.date ?? `${y.year}-01-01`,
       date_end: y.dateEnd ?? null,
-      city: yearLoc?.city ?? festLoc?.city ?? null,
+      city,
       country: yearLoc?.country ?? festLoc?.country ?? null,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
       poster_url: lineup.posterUrl ?? null,
       source: 'wikipedia' as const,
       source_id: sourceId,
