@@ -459,7 +459,7 @@ const FESTIVAL_KEYWORDS = [
   'festival', 'fest', 'lollapalooza', 'coachella', 'primavera', 'bonnaroo',
   'glastonbury', 'tomorrowland', 'sonar', 'mad cool', 'rock al parque',
   'estéreo picnic', 'estereo picnic', 'vive latino', 'corona capital',
-  'download', 'reading', 'leeds', 'rock in rio', 'summerfest', 'ultra',
+  'rock in rio', 'summerfest', 'ultra',
   'creamfields', 'electric daisy', 'edc', 'austin city limits', 'acl',
 ];
 
