@@ -721,7 +721,7 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
 
   // Edition tracking — for multi-country festivals like Knotfest
   // Blacklist of section titles that are NOT edition labels
-  const EDITION_BLACKLIST = /^(dates?|line-?ups?|performers?|artists?|bands?|tickets?|stages?|schedule|format|venue|venues|history|references|see also|external links|notes|overview|background|legacy|details|other acts|side\s*shows?|tour|tours|set\s*list|critical|reception|incidents?|aftermath|cancellation|media|broadcast|sponsors|pre-?party)\b/i;
+  const EDITION_BLACKLIST = /^(dates?|line-?ups?|performers?|artists?|bands?|tickets?|stages?|schedule|format|venue|venues|history|references|see also|external links|notes|overview|background|legacy|details|other acts|side\s*shows?|tour|tours|set\s*list|critical|reception|incidents?|aftermath|cancellation|media|broadcast|sponsors|pre-?party|cambios?|cancelaci[oó]n|cancelaciones|actos?\s|sorpresa|confirmados?|anunciados?|novedades?|noticias|actuaciones?|bajas?|sustituciones?|rumores?)\b/i;
 
   let currentEdition: string | undefined = fallbackEdition;
 
@@ -787,7 +787,7 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
           // e.g., "Ozzfest Meets Knotfest 2017" under "2017 line-up"
           if ((tag === 'h4' || tag === 'h5') && year && year === currentYearT) {
             const editionText = stripHtml(text).replace(/\b\d{4}\b/g, '').replace(/\s{2,}/g, ' ').trim();
-            if (editionText.length > 1 && editionText.length < 60 && !EDITION_BLACKLIST.test(editionText)) {
+            if (editionText.length > 1 && editionText.length < 40 && !editionText.includes(',') && !EDITION_BLACKLIST.test(editionText)) {
               currentEdition = editionText;
               currentDayT = undefined;
             }
@@ -804,7 +804,7 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
           // Edition/region detection — h4/h5 that is NOT a year or day
           if ((tag === 'h4' || tag === 'h5') && !year && !isDayHeader) {
             const editionText = stripHtml(text);
-            if (editionText.length > 1 && editionText.length < 60 && !EDITION_BLACKLIST.test(editionText)) {
+            if (editionText.length > 1 && editionText.length < 40 && !editionText.includes(',') && !EDITION_BLACKLIST.test(editionText)) {
               currentEdition = editionText;
               currentDayT = undefined;
             }
@@ -823,7 +823,7 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
         // h4 with a year matching current year → edition, not a new year
         if (tag === 'h4' && year && year === currentYearT) {
           const editionText = stripHtml(text).replace(/\b\d{4}\b/g, '').replace(/\s{2,}/g, ' ').trim();
-          if (editionText.length > 1 && editionText.length < 60 && !EDITION_BLACKLIST.test(editionText)) {
+          if (editionText.length > 1 && editionText.length < 40 && !editionText.includes(',') && !EDITION_BLACKLIST.test(editionText)) {
             currentEdition = editionText;
             currentDayT = undefined;
           }
@@ -840,7 +840,7 @@ function parseLineupHtml(html: string, fallbackYear?: number, fallbackEdition?: 
         // Edition/region detection — h4 that is NOT a year or day
         if (tag === 'h4' && !year && !isDayHeader) {
           const editionText = stripHtml(text);
-          if (editionText.length > 1 && editionText.length < 60 && !EDITION_BLACKLIST.test(editionText)) {
+          if (editionText.length > 1 && editionText.length < 40 && !editionText.includes(',') && !EDITION_BLACKLIST.test(editionText)) {
             currentEdition = editionText;
             currentDayT = undefined;
           }
