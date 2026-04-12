@@ -70,8 +70,8 @@ function getEventImage(e: UserEventWithJoins): string | null {
     ?.artists.image_url ?? null;
 
   if (e.event_type === 'festival') {
-    // Festivals: DuckDuckGo poster > first artist alphabetically
-    return e.global_events?.poster_url ?? firstArtistImage;
+    // Festivals: logo > cartel > first artist alphabetically
+    return e.global_events?.poster_url ?? e.global_events?.lineup_image_url ?? firstArtistImage;
   }
   // Concerts: first artist alphabetically > poster_url as last resort
   return firstArtistImage ?? e.global_events?.poster_url ?? null;
