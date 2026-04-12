@@ -542,6 +542,36 @@ export function extractDate(html: string, year: number): { date: string; dateEnd
     }
   }
 
+  // Pattern 6: "el DD de month" / "los días DD y DD de month" — Spanish/Portuguese without year
+  // Common in per-year section prose where the year is implied by the section heading
+  const p6a = /(?:los\s+días?\s+|el\s+día\s+|el\s+)(\d{1,2})\s*(?:y|–|—|-)\s*(\d{1,2})\s+de\s+(MONTHS)/i.source.replace('MONTHS', MONTH_NAMES);
+  const m6a = text.match(new RegExp(p6a, 'i'));
+  if (m6a) {
+    const month = ALL_MONTHS[m6a[3].toLowerCase()];
+    if (month) {
+      return { date: `${year}-${month}-${m6a[1].padStart(2, '0')}`, dateEnd: `${year}-${month}-${m6a[2].padStart(2, '0')}` };
+    }
+  }
+
+  const p6b = /(?:el\s+día\s+|el\s+|celebr[oó]\s+el\s+)(\d{1,2})\s+de\s+(MONTHS)/i.source.replace('MONTHS', MONTH_NAMES);
+  const m6b = text.match(new RegExp(p6b, 'i'));
+  if (m6b) {
+    const month = ALL_MONTHS[m6b[2].toLowerCase()];
+    if (month) {
+      return { date: `${year}-${month}-${m6b[1].padStart(2, '0')}` };
+    }
+  }
+
+  // Pattern 7: "on the Nth/DD of Month" — English without year
+  const p7 = /(?:held\s+on|took\s+place\s+on|on\s+the\s+)(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(MONTHS)/i.source.replace('MONTHS', MONTH_NAMES);
+  const m7 = text.match(new RegExp(p7, 'i'));
+  if (m7) {
+    const month = ALL_MONTHS[m7[2].toLowerCase()];
+    if (month) {
+      return { date: `${year}-${month}-${m7[1].padStart(2, '0')}` };
+    }
+  }
+
   return null;
 }
 
@@ -640,6 +670,33 @@ export function extractLocation(html: string): FestivalLocation | null {
         });
       }
       return normalizeLocation({ city: goodParts[0].trim(), raw: cleaned });
+    }
+  }
+
+  // Venue-name patterns — only accept if result is a known city
+  // "Universidad/Campus/Estadio X de Madrid" → "Madrid"
+  const venuePatterns: RegExp[] = [
+    /(?:Universidad|Campus|Estadio|Recinto|Complejo|Parque|Hipódromo|Velódromo|Auditorio|Palacio)\s+(?:[\w\sÀ-ÿ]+\s+)?de\s+([A-Z][A-Za-zÀ-ÿ]{2,}(?:\s[A-Za-zÀ-ÿ]+){0,2})(?:[.,\s]|$)/,
+    /(?:University|Stadium|Arena|Park|Fairground|Racecourse|Hippodrome)\s+(?:of|in)\s+([A-Z][A-Za-zÀ-ÿ]{2,}(?:\s[A-Za-zÀ-ÿ]+){0,2})(?:[.,\s]|$)/,
+  ];
+  for (const vp of venuePatterns) {
+    const vm = text.match(vp);
+    if (vm && vm[1]) {
+      const candidate = vm[1].trim();
+      const known = CITY_MAP[candidate.toLowerCase()];
+      if (known) return { city: known.city, country: known.country, raw: candidate };
+    }
+  }
+
+  // Final fallback: scan full text for any known city name
+  // Handles "Universidad Complutense de Madrid", "Recinto Ferial de Zaragoza", etc.
+  const lowerText = text.toLowerCase();
+  // Sort by length descending so "buenos aires" matches before "aires"
+  const sortedCities = Object.entries(CITY_MAP).sort((a, b) => b[0].length - a[0].length);
+  for (const [key, cityInfo] of sortedCities) {
+    if (key.length < 4) continue; // skip ambiguous short keys like "ba", "rio"
+    if (lowerText.includes(key)) {
+      return { city: cityInfo.city, country: cityInfo.country, raw: key };
     }
   }
 

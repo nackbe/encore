@@ -158,8 +158,6 @@ async function main() {
       date_end: y.dateEnd ?? null,
       city: yearLoc?.city ?? festLoc?.city ?? null,
       country: yearLoc?.country ?? festLoc?.country ?? null,
-      lat: yearLoc?.lat ?? festLoc?.lat ?? null,
-      lng: yearLoc?.lng ?? festLoc?.lng ?? null,
       poster_url: lineup.posterUrl ?? null,
       source: 'wikipedia' as const,
       source_id: sourceId,
