@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { normalizeText } from '@/lib/utils';
 import { useUser } from '@/hooks/useUser';
 import { useSupabase } from '@/hooks/useSupabase';
 import { useQuery } from '@tanstack/react-query';
@@ -86,7 +87,7 @@ export default function StatsPage() {
       const uniqueArtistIds = new Set<string>();
       const yearCounts: Record<number, number> = {};
       const typeCounts: Record<string, number> = {};
-      const cityCounts: Record<string, number> = {};
+      const cityData: Record<string, { displayName: string; count: number }> = {};
       const countries = new Set<string>();
       let totalRating = 0;
       let ratedCount = 0;
@@ -127,7 +128,14 @@ export default function StatsPage() {
 
         const city = event.global_events?.city ?? event.custom_event_city;
         if (city) {
-          cityCounts[city] = (cityCounts[city] ?? 0) + 1;
+          const cityKey = normalizeText(city);
+          if (!cityData[cityKey]) {
+            cityData[cityKey] = { displayName: city, count: 0 };
+          } else if (city !== normalizeText(city)) {
+            // Prefer the accented version as display name (e.g. "Bogotá" over "Bogota")
+            cityData[cityKey].displayName = city;
+          }
+          cityData[cityKey].count++;
         }
 
         const country = event.global_events?.country;
@@ -248,16 +256,16 @@ export default function StatsPage() {
             )
           : '-';
 
-      const topCities = Object.entries(cityCounts)
-        .sort(([, a], [, b]) => b - a)
+      const topCities = Object.values(cityData)
+        .sort((a, b) => b.count - a.count)
         .slice(0, 8)
-        .map(([city, count]) => ({ city, count }));
+        .map(({ displayName, count }) => ({ city: displayName, count }));
 
       return {
         totalEvents,
         uniqueArtists: uniqueArtistIds.size,
         festivals: festivalCount,
-        cities: Object.keys(cityCounts).length,
+        cities: Object.keys(cityData).length,
         countries: countries.size,
         avgRating: ratedCount > 0 ? (totalRating / ratedCount).toFixed(1) : '-',
         mostSeenArtist,

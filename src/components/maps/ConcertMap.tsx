@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { normalizeText } from '@/lib/utils';
 
 interface MapEvent {
   lat: number;
@@ -59,7 +60,7 @@ export function ConcertMap({ events, className, eventsLabel = 'events' }: Concer
     // Group events by city (same city = same marker even if venues differ)
     const grouped: Record<string, MapEvent[]> = {};
     events.forEach((event) => {
-      const key = event.city.trim().toLowerCase() || `${event.lat.toFixed(1)},${event.lng.toFixed(1)}`;
+      const key = normalizeText(event.city) || `${event.lat.toFixed(1)},${event.lng.toFixed(1)}`;
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(event);
     });
