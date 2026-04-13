@@ -6,8 +6,9 @@ Music event collection app. Users register concerts and festivals they've attend
 ## Image cascade decisions (IMPORTANT — do not change order)
 
 ### Festival card image (`CollectionGrid.tsx → getEventImage`)
-1. `global_events.poster_url` — scraped by DuckDuckGo via `scripts/seed/run-festival-images.ts`
-2. Fallback: `image_url` of the **first artist alphabetically** from `user_event_artists`
+1. `global_events.lineup_image_url` — cartel (preferred)
+2. `global_events.poster_url` — logo scraped by DuckDuckGo via `scripts/seed/run-festival-images.ts`
+3. Fallback: `image_url` of the **first artist alphabetically** from `user_event_artists`
 
 Wikipedia `pageimages` API returns generic crowd photos — all look the same. DuckDuckGo logo search gets real festival branding. Sort artists alphabetically before picking fallback (`localeCompare`), never rely on DB insertion order.
 
